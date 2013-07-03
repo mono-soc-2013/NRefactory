@@ -202,12 +202,15 @@ namespace ICSharpCode.NRefactory.CSharp
 
             if (Environment.NewLine.Contains(ch))
             {
-                ThisLineIndent = NextLineIndent.Clone();
-
-                if (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
+                if (Engine.previousChar == ';')
                 {
-                    NextLineIndent.Pop();
-                }
+                    while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
+                    {
+                        NextLineIndent.Pop();
+                    }
+                } 
+                
+                ThisLineIndent = NextLineIndent.Clone();
             }
         }
 
@@ -258,11 +261,7 @@ namespace ICSharpCode.NRefactory.CSharp
             }
             else if (specials.Contains(keyword))
             {
-                // there can be only one continuation nested on the stack.
-                if (NextLineIndent.Count > 0 && NextLineIndent.Peek() != IndentType.Continuation)
-                {
-                    NextLineIndent.Push(IndentType.Continuation);
-                }
+                NextLineIndent.Push(IndentType.Continuation);
             }
         }
 

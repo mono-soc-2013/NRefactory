@@ -97,8 +97,22 @@ class Foo {
 	void Test ()
 	{
 		do
-$");
+            $");
             Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBlock_Do2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		do
+            ;
+$");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
             Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
 
@@ -110,8 +124,22 @@ class Foo {
 	void Test ()
 	{
 		do do
+                $");
+            Assert.AreEqual("\t\t\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBlock_NestedDo2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		do do
+                ;
 $");
-            Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
             Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
 
@@ -123,8 +151,25 @@ class Foo {
 	void Test ()
 	{
 		do do do
-foo();$");
-            Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+                   foo();
+$");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBlock_NestedDoContinuationSetBack2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		do 
+            do
+                do
+                    foo();
+$");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
             Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
 
