@@ -24,23 +24,53 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using ICSharpCode.NRefactory.Editor;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
+    /// <summary>
+    ///     The indentation engine.
+    /// </summary>
+    /// <remarks>
+    ///     Represents the context for transitions between <see cref="IndentState"/>.
+    ///     Delegates the responsibility for pushing a new char to the
+    ///     current state and changes between states depending on the pushed char.
+    ///     chars.
+    /// </remarks>
     public class IndentEngine
     {
+        #region Properties
+
+        /// <summary>
+        ///     Defined conditional symbols for preprocessor directives.
+        /// </summary>
+        public IList<string> ConditionalSymbols = new List<string>();
+
+        /// <summary>
+        ///     Document that's parsed by the engine.
+        /// </summary>
         internal readonly IDocument Document;
+
+        /// <summary>
+        ///     Formatting options.
+        /// </summary>
         internal readonly CSharpFormattingOptions Options;
+
+        /// <summary>
+        ///     Text editor options.
+        /// </summary>
         internal readonly TextEditorOptions TextEditorOptions;
+
+        /// <summary>
+        ///     The current indentation state.
+        /// </summary>
         internal IndentState CurrentState;
 
-        internal int offset;
-        internal int line;
-        internal int column;
-        internal bool isLineStart = true;
-
+        /// <summary>
+        ///     
+        /// </summary>
         public TextLocation Location
         {
             get
@@ -49,6 +79,9 @@ namespace ICSharpCode.NRefactory.CSharp
             }
         }
 
+        /// <summary>
+        ///     
+        /// </summary>
         public int Offset
         {
             get
@@ -57,29 +90,52 @@ namespace ICSharpCode.NRefactory.CSharp
             }
         }
 
+        /// <summary>
+        ///     
+        /// </summary>
         public string ThisLineIndent
         {
             get
             {
-                return CurrentState.ThisLineindent.IndentString;
+                return CurrentState.ThisLineIndent.IndentString;
             }
         }
 
+        /// <summary>
+        ///     
+        /// </summary>
         public string NewLineIndent
         {
             get
             {
-                return CurrentState.Indent.IndentString + CurrentState.IndentDelta.IndentString;
+                return CurrentState.NextLineIndent.IndentString;
             }
         }
 
+        /// <summary>
+        ///     
+        /// </summary>
         public bool NeedsReindent
         {
             get
             {
-                return ThisLineIndent != CurrentState.CurrentIndent.ToString();
+                throw new NotImplementedException();
             }
         }
+
+        #endregion
+
+        #region Fields
+
+        internal int offset = 0;
+        internal int line = 1;
+        internal int column = 1;
+        internal bool isLineStart = true;
+        internal char previousChar = '\0';
+
+        #endregion
+
+        #region Constructors
 
         public IndentEngine(IDocument document, TextEditorOptions textEditorOptions, CSharpFormattingOptions formattingOptions)
         {
@@ -100,16 +156,61 @@ namespace ICSharpCode.NRefactory.CSharp
             this.line = prototype.line;
             this.column = prototype.column;
             this.isLineStart = prototype.isLineStart;
+            this.previousChar = prototype.previousChar;
         }
+
+        #endregion
+
+        #region IClonable
 
         public IndentEngine Clone()
         {
             return new IndentEngine(this);
         }
 
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        ///     Pushes a new char into the current state and calculates the new
+        ///     indentation level.
+        /// </summary>
+        /// <param name="ch">
+        ///     A new character.
+        /// </param>
         public void Push(char ch)
         {
+            offset++;
+            if (!Environment.NewLine.Contains(ch))
+            {
+                isLineStart &= ch == ' ' || ch == '\t';
+                column++;
+            }
+            else
+            {
+                if (ch == '\n' && previousChar == '\r')
+                {
+                    return;
+                }
+
+                isLineStart = true;
+                column = 1;
+                line++;
+            }
+
             CurrentState.Push(ch);
+            previousChar = ch;
         }
+
+        public void UpdateToOffset(int toOffset)
+        {
+            for (int i = offset; i < toOffset; i++)
+            {
+                Push(Document.GetCharAt(i));
+            }
+        }
+
+        #endregion
     }
 }
