@@ -1070,18 +1070,27 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </summary>
     internal class VerbatimString : IndentState
     {
+        /// <summary>
+        ///     True if there are odd number of '"' in a row.
+        /// </summary>
+        internal bool IsEscaped;
+
         public VerbatimString(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
         { }
-
+        
         public override void Push(char ch)
         {
             base.Push(ch);
 
-            if (ch == '"')
+            if (IsEscaped && ch != '"')
             {
                 ExitState();
+                // the char has been pushed to the wrong state
+                Engine.CurrentState.Push(ch);
             }
+
+            IsEscaped = ch == '"' && !IsEscaped;
         }
         
         public override void InitializeState()

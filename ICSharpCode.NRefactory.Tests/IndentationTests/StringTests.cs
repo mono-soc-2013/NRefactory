@@ -123,5 +123,25 @@ namespace Foo {
             Assert.AreEqual("", indent.ThisLineIndent);
             Assert.AreEqual("\t", indent.NewLineIndent);
         }
+
+        [Test]
+        public void TestVerbatim_EscapedMultiLine()
+        {
+            var indent = Helper.CreateEngine(@"
+namespace Foo {
+    @"" some verbatim string """" { $");
+            Assert.AreEqual("\t", indent.ThisLineIndent);
+            Assert.AreEqual("", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestVerbatim_EscapedMultiLine2()
+        {
+            var indent = Helper.CreateEngine(@"
+namespace Foo {
+    @"" some verbatim string """""" { $");
+            Assert.AreEqual("\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
     }
 }
