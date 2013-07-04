@@ -39,8 +39,33 @@ class Foo {
             var indent = Helper.CreateEngine(@"
 class Foo {
     for (;;)
-        // comment $");
+        // comment 
+        $");
             Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestLineComment_For2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+    for (;;)
+        // comment 
+        Test();
+    $");
+            Assert.AreEqual("\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestLineComment_For3()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+    for (;;) ;
+    // comment $");
+            Assert.AreEqual("\t", indent.ThisLineIndent);
             Assert.AreEqual("\t", indent.NewLineIndent);
         }
 

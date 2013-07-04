@@ -77,7 +77,8 @@ namespace ICSharpCode.NRefactory.CSharp
 
         /// <summary>
         ///     The indentation of this line.
-        ///     This is set when the state is created and doesn't change.
+        ///     This is set when the state is created and can change when the
+        ///     newline char is pushed.
         /// </summary>
         public Indent ThisLineIndent;
 
@@ -239,7 +240,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <param name="keyword">
         ///     A possible keyword.
         /// </param>
-        void CheckKeyword(string keyword)
+        internal virtual void CheckKeyword(string keyword)
         {
             var blocks = new Dictionary<string, Body>
             {
@@ -291,7 +292,7 @@ namespace ICSharpCode.NRefactory.CSharp
         ///     Pushes a new level of indentation depending on the given
         ///     <paramref name="body"/>.
         /// </summary>
-        protected void AddIndentation(Body body)
+        internal void AddIndentation(Body body)
         {
             switch (body)
             {
@@ -767,6 +768,11 @@ namespace ICSharpCode.NRefactory.CSharp
             ThisLineIndent = new Indent(Engine.TextEditorOptions);
             NextLineIndent = Parent.ThisLineIndent.Clone();
         }
+
+        internal override void CheckKeyword(string keyword)
+        {
+            return;
+        }
     }
 
     #endregion
@@ -799,7 +805,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void InitializeState()
         {
-            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            ThisLineIndent = Parent.NextLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
         }
     }
@@ -924,6 +930,11 @@ namespace ICSharpCode.NRefactory.CSharp
 
             CheckForDocComment = false;
         }
+
+        internal override void CheckKeyword(string keyword)
+        {
+            return;
+        }
     }
 
     #endregion
@@ -941,12 +952,15 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void Push(char ch)
         {
-            base.Push(ch);
-
             if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
+        }
+
+        internal override void CheckKeyword(string keyword)
+        {
+            return;
         }
     }
 
@@ -980,6 +994,11 @@ namespace ICSharpCode.NRefactory.CSharp
             // add extra spaces so that the next line of the comment is align
             // to the first line
             NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent;
+        }
+
+        internal override void CheckKeyword(string keyword)
+        {
+            return;
         }
     }
 
