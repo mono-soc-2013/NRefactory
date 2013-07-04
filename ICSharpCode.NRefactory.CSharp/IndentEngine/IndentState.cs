@@ -660,6 +660,21 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 ChangeState<MultiLineComment>();
             }
+            else if (ch == '"')
+            {
+                if (Engine.previousChar == '@')
+                {
+                    ChangeState<VerbatimString>();
+                }
+                else
+                {
+                    ChangeState<StringLiteral>();
+                }
+            }
+            else if (ch == '\'')
+            {
+                ChangeState<Character>();
+            }
             else if (ch == '{')
             {
                 ChangeState<BlockBody>();
@@ -999,6 +1014,124 @@ namespace ICSharpCode.NRefactory.CSharp
         internal override void CheckKeyword(string keyword)
         {
             return;
+        }
+    }
+
+    #endregion
+
+    #region StringLiteral state
+
+    /// <summary>
+    ///     StringLiteral state.
+    /// </summary>
+    internal class StringLiteral : IndentState
+    {
+        /// <summary>
+        ///     True if the next char is escaped with '\'.
+        /// </summary>
+        internal bool IsEscaped;
+
+        public StringLiteral(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+
+        public override void Push(char ch)
+        {
+            if (Environment.NewLine.Contains(ch))
+            {
+                ExitState();
+            }
+            else if (!IsEscaped && ch == '"')
+            {
+                ExitState();
+            }
+            
+            IsEscaped = ch == '\\' && !IsEscaped;
+        }
+
+        public override void InitializeState()
+        {
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = ThisLineIndent.Clone();
+        }
+
+        internal override void CheckKeyword(string keyword)
+        {
+            return;
+        }
+    }
+
+    #endregion
+
+    #region Verbatim string state
+
+    /// <summary>
+    ///     Verbatim string state.
+    /// </summary>
+    internal class VerbatimString : IndentState
+    {
+        public VerbatimString(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+
+        public override void Push(char ch)
+        {
+            base.Push(ch);
+
+            if (ch == '"')
+            {
+                ExitState();
+            }
+        }
+        
+        public override void InitializeState()
+        {
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = new Indent(Engine.TextEditorOptions);
+        }
+
+        internal override void CheckKeyword(string keyword)
+        {
+            return;
+        }
+    }
+
+    #endregion
+
+    #region Character state
+
+    /// <summary>
+    ///     Character state.
+    /// </summary>
+    internal class Character : IndentState
+    {
+        /// <summary>
+        ///     True if the next char is escaped with '\'.
+        /// </summary>
+        internal bool IsEscaped;
+
+        public Character(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+
+        public override void Push(char ch)
+        {
+            if (Environment.NewLine.Contains(ch))
+            {
+                ExitState();
+            }
+            else if (!IsEscaped && ch == '\'')
+            {
+                ExitState();
+            }
+
+            IsEscaped = ch == '\\' && !IsEscaped;
+        }
+
+        public override void InitializeState()
+        {
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = ThisLineIndent.Clone();
         }
     }
 
