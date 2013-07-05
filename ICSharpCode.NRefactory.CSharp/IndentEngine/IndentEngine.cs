@@ -35,18 +35,22 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </summary>
     /// <remarks>
     ///     Represents the context for transitions between <see cref="IndentState"/>.
-    ///     Delegates the responsibility for pushing a new char to the
-    ///     current state and changes between states depending on the pushed char.
-    ///     chars.
+    ///     Delegates the responsibility for pushing a new char to the current 
+    ///     state and changes between states depending on the pushed chars.
     /// </remarks>
     public class IndentEngine
     {
         #region Properties
 
         /// <summary>
-        ///     Defined conditional symbols for preprocessor directives.
+        ///     Stores conditional symbols for preprocessor directives.
         /// </summary>
         public IList<string> ConditionalSymbols = new List<string>();
+
+        /// <summary>
+        ///     Represents the newline char.
+        /// </summary>
+        public readonly char NewLine = '\r';
 
         /// <summary>
         ///     Document that's parsed by the engine.
@@ -69,7 +73,7 @@ namespace ICSharpCode.NRefactory.CSharp
         internal IndentState CurrentState;
 
         /// <summary>
-        ///     
+        ///     The current location of the engine in <see cref="Document"/>.
         /// </summary>
         public TextLocation Location
         {
@@ -80,7 +84,7 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     
+        ///     The current offset of the engine in <see cref="Document"/>.
         /// </summary>
         public int Offset
         {
@@ -91,7 +95,7 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     
+        ///     The indentation string of the current line.
         /// </summary>
         public string ThisLineIndent
         {
@@ -102,7 +106,7 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     
+        ///     The indentation string of the next line.
         /// </summary>
         public string NewLineIndent
         {
@@ -113,7 +117,7 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     
+        ///     True if the current line needs to be reindented.
         /// </summary>
         public bool NeedsReindent
         {
@@ -151,8 +155,11 @@ namespace ICSharpCode.NRefactory.CSharp
             this.Document = prototype.Document;
             this.Options = prototype.Options;
             this.TextEditorOptions = prototype.TextEditorOptions;
-            this.CurrentState = CurrentState.Clone();
-
+            this.CurrentState = prototype.CurrentState.Clone();
+            this.NewLine = prototype.NewLine;
+            this.ConditionalSymbols = prototype.ConditionalSymbols
+                                               .Select(s => s)
+                                               .ToList();
             this.offset = prototype.offset;
             this.line = prototype.line;
             this.column = prototype.column;
@@ -174,7 +181,7 @@ namespace ICSharpCode.NRefactory.CSharp
         #region Methods
 
         /// <summary>
-        ///     Pushes a new char into the current state and calculates the new
+        ///     Pushes a new char into the current state which calculates the new
         ///     indentation level.
         /// </summary>
         /// <param name="ch">
@@ -211,6 +218,7 @@ namespace ICSharpCode.NRefactory.CSharp
             }
 
             CurrentState.Push(ch);
+
             previousChar = ch;
             if (!char.IsWhiteSpace(ch))
             {
