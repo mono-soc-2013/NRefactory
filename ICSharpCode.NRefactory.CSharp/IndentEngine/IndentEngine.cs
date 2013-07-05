@@ -48,11 +48,6 @@ namespace ICSharpCode.NRefactory.CSharp
         public IList<string> ConditionalSymbols = new List<string>();
 
         /// <summary>
-        ///     Represents the newline char.
-        /// </summary>
-        public readonly char NewLine = '\r';
-
-        /// <summary>
         ///     Document that's parsed by the engine.
         /// </summary>
         internal readonly IDocument Document;
@@ -156,7 +151,6 @@ namespace ICSharpCode.NRefactory.CSharp
             this.Options = prototype.Options;
             this.TextEditorOptions = prototype.TextEditorOptions;
             this.CurrentState = prototype.CurrentState.Clone();
-            this.NewLine = prototype.NewLine;
             this.ConditionalSymbols = prototype.ConditionalSymbols
                                                .Select(s => s)
                                                .ToList();
@@ -192,8 +186,6 @@ namespace ICSharpCode.NRefactory.CSharp
             offset++;
             if (!Environment.NewLine.Contains(ch))
             {
-                isLineStart &= char.IsWhiteSpace(ch);
-
                 if (ch == '\t')
                 {
                     var nextTabStop = (column - 1 + TextEditorOptions.IndentSize) / TextEditorOptions.IndentSize;
@@ -207,7 +199,11 @@ namespace ICSharpCode.NRefactory.CSharp
             }
             else
             {
-                if (ch == '\n' && previousChar == '\r')
+                // the current implementation accepts any caracter in Environment.NewLine
+                // as the newline character. This tries to prevent pushing multiple newline 
+                // chars in a row when only one newline is intended by the user.
+                // TODO: Find a better solution.
+                if (Environment.NewLine.Contains(previousChar) && previousChar != ch)
                 {
                     return;
                 }
@@ -218,6 +214,8 @@ namespace ICSharpCode.NRefactory.CSharp
             }
 
             CurrentState.Push(ch);
+
+            isLineStart &= char.IsWhiteSpace(ch);
 
             previousChar = ch;
             if (!char.IsWhiteSpace(ch))

@@ -150,10 +150,11 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             // if a state exits on the newline character, it has to push
             // it back to its parent (and so on recursively if the parent 
-            // state also exits).
+            // state also exits). Otherwise, the parent state wouldn't
+            // know that the engine isn't on the same line anymore.
             if (Engine.isLineStart && Engine.column == 1)
             {
-                Parent.Push(Engine.NewLine);
+                Parent.Push(Environment.NewLine.First());
             }
         }
 
@@ -199,7 +200,7 @@ namespace ICSharpCode.NRefactory.CSharp
                 WordToken.Length = 0;
             }
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ThisLineIndent = NextLineIndent.Clone();
             }
@@ -368,7 +369,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void Push(char ch)
         {
-            if (Engine.lastSignificantChar == ';')
+            if (Environment.NewLine.Contains(ch) && Engine.lastSignificantChar == ';')
             {
                 while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
                 {
@@ -378,7 +379,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
             base.Push(ch);
 
-            if (ch == '#')
+            if (ch == '#' && Engine.isLineStart)
             {
                 ChangeState<PreProcessor>();
             }
@@ -723,7 +724,7 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 case PreProcessorDirective.If:
                 case PreProcessorDirective.Elif:
-                    if (ch == Engine.NewLine)
+                    if (Environment.NewLine.Contains(ch))
                     {
                         if (eval(IfDirectiveStatement.ToString()))
                         {
@@ -1053,7 +1054,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == '#')
+            if (ch == '#' && Engine.isLineStart)
             {
                 ExitState();
                 ChangeState<PreProcessor>();
@@ -1087,7 +1088,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
@@ -1120,7 +1121,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
@@ -1176,7 +1177,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
@@ -1208,7 +1209,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
@@ -1243,7 +1244,7 @@ namespace ICSharpCode.NRefactory.CSharp
             ThisLineIndent = Parent.ThisLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
             // add extra spaces so that the next line of the comment is align
-            // to the first character in the comment
+            // to the first character in the first line of the comment
             NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent;
         }
 
@@ -1276,7 +1277,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
@@ -1362,7 +1363,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == Engine.NewLine)
+            if (Environment.NewLine.Contains(ch))
             {
                 ExitState();
             }
