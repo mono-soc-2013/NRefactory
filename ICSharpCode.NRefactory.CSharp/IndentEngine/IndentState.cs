@@ -160,7 +160,21 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     Changes the current <see cref="IndentationEngine"/> state using the current
+        ///     Actions performed when this state exits.
+        /// </summary>
+        public virtual void OnExit()
+        {
+            // if this state exits on the newline character, it has to push
+            // it to its parent (and so on recursively if the parent state 
+            // also exits)
+            if (Engine.isLineStart && Engine.column == 1)
+            {
+                Parent.Push('\r');
+            }
+        }
+
+        /// <summary>
+        ///     Changes the current <see cref="IndentEngine"/> state using the current
         ///     state as the parent for the new one.
         /// </summary>
         /// <typeparam name="T">
@@ -179,6 +193,7 @@ namespace ICSharpCode.NRefactory.CSharp
         public virtual void ExitState()
         {
             Engine.CurrentState = Engine.CurrentState.Parent;
+            OnExit();
         }
 
         /// <summary>
@@ -783,6 +798,12 @@ namespace ICSharpCode.NRefactory.CSharp
             NextLineIndent = ThisLineIndent.Clone();
             NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
         }
+
+        public override void OnExit()
+        {
+            // fix the current line indentation of the parent state
+            Parent.ThisLineIndent = ThisLineIndent.Clone();
+        }
     }
 
     #endregion
@@ -812,6 +833,12 @@ namespace ICSharpCode.NRefactory.CSharp
             NextLineIndent = ThisLineIndent.Clone();
             NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
         }
+
+        public override void OnExit()
+        {
+            // fix the current line indentation of the parent state
+            Parent.ThisLineIndent = ThisLineIndent.Clone();
+        }
     }
 
     #endregion
@@ -840,6 +867,12 @@ namespace ICSharpCode.NRefactory.CSharp
             ThisLineIndent = Parent.ThisLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
             NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
+        }
+
+        public override void OnExit()
+        {
+            // fix the current line indentation of the parent state
+            Parent.ThisLineIndent = ThisLineIndent.Clone();
         }
     }
 
@@ -1160,6 +1193,12 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             return;
         }
+
+        public override void OnExit()
+        {
+            // fix the current line indentation of the parent state
+            Parent.ThisLineIndent = ThisLineIndent.Clone();
+        }
     }
 
     #endregion
@@ -1247,6 +1286,12 @@ namespace ICSharpCode.NRefactory.CSharp
         internal override void CheckKeyword(string keyword)
         {
             return;
+        }
+
+        public override void OnExit()
+        {
+            // fix the current line indentation of the parent state
+            Parent.ThisLineIndent = ThisLineIndent.Clone();
         }
     }
 

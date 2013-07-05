@@ -3,21 +3,21 @@
 namespace ICSharpCode.NRefactory.IndentationTests
 {
     [TestFixture]
-    public class BlockTest
+    public class BracketsTest
     {
         [Test]
-        public void TestBlock_Simple()
+        public void TestBrackets_Simple()
         {
-            var code =
-@"namespace Foo {
+            var indent = Helper.CreateEngine(@"
+namespace Foo {
     class Foo {
-";
-            var indentationLevels = new int[] { 0, 4 };
-            Helper.Driver(code, indentationLevels);
+        $");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
 
         [Test]
-        public void TestBlock_PreProcessor()
+        public void TestBrackets_PreProcessor()
         {
             var indent = Helper.CreateEngine(@"
 namespace Foo {
@@ -31,7 +31,7 @@ namespace Foo {
         }
 
         [Test]
-        public void TestBlock_PreProcessor_IfStatement()
+        public void TestBrackets_PreProcessor_IfStatement()
         {
             var indent = Helper.CreateEngine(@"
 namespace Foo {
@@ -45,7 +45,7 @@ namespace Foo {
         }
 
         [Test]
-        public void TestBlock_If()
+        public void TestBrackets_If()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -57,7 +57,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_While()
+        public void TestBrackets_While()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -69,7 +69,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_For()
+        public void TestBrackets_For()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -81,7 +81,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_Foreach()
+        public void TestBrackets_Foreach()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -93,7 +93,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_Do()
+        public void TestBrackets_Do()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -106,7 +106,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_Do2()
+        public void TestBrackets_Do2()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -120,7 +120,7 @@ $");
         }
 
         [Test]
-        public void TestBlock_NestedDo()
+        public void TestBrackets_NestedDo()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -133,7 +133,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_NestedDo2()
+        public void TestBrackets_NestedDo2()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -147,7 +147,7 @@ $");
         }
 
         [Test]
-        public void TestBlock_NestedDoContinuationSetBack()
+        public void TestBrackets_NestedDoContinuationSetBack()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -161,7 +161,7 @@ $");
         }
 
         [Test]
-        public void TestBlock_NestedDoContinuationSetBack2()
+        public void TestBrackets_NestedDoContinuationSetBack2()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -177,7 +177,7 @@ $");
         }
 
         [Test]
-        public void TestBlock_ThisLineIndentAfterCurlyBrace()
+        public void TestBrackets_ThisLineIndentAfterCurlyBrace()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -189,7 +189,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_ThisLineIndentAfterCurlyBrace2()
+        public void TestBrackets_ThisLineIndentAfterCurlyBrace2()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -200,7 +200,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_Parameters()
+        public void TestBrackets_Parameters()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -212,7 +212,7 @@ class Foo {
         }
 
         [Test]
-        public void TestBlock_Parameters2()
+        public void TestBrackets_Parameters2()
         {
             var indent = Helper.CreateEngine(@"
 class Foo {
@@ -220,6 +220,99 @@ class Foo {
 	{
 		Foo($");
             Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_Parenthesis()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Foooo(a, b, c, // ) 
+              $");
+            Assert.AreEqual("\t\t      ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t      ", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_Parenthesis2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Foooo(a, b, c, // ) 
+              d) $");
+            Assert.AreEqual("\t\t      ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_SquareBrackets()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		var v = [a, b, c, // ] 
+                 $");
+            Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t         ", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_SquareBrackets2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		var v = [a, b, c, // ]
+                 d] $");
+            Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_AngleBrackets()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Func<a, b, c, // > 
+             $");
+            Assert.AreEqual("\t\t     ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t     ", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_AngleBrackets2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Func<a, b, c, // >
+             d> $");
+            Assert.AreEqual("\t\t     ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_Nested()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Foo(a, b, bar(c, d<T,  // T
+                           G>, // G
+                      e), $    // e
+            f);");
+            Assert.AreEqual("\t\t              ", indent.ThisLineIndent);
             Assert.AreEqual("\t\t    ", indent.NewLineIndent);
         }
     }

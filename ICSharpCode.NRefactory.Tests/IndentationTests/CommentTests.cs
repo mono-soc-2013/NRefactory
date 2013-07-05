@@ -93,7 +93,7 @@ class Foo {
     /* line 1 
      * line 2
      **/$");
-            Assert.AreEqual("\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t   ", indent.ThisLineIndent);
             Assert.AreEqual("\t", indent.NewLineIndent);
         }
 
