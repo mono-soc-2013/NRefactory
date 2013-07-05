@@ -203,7 +203,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
             if (Environment.NewLine.Contains(ch))
             {
-                if (Engine.previousChar == ';')
+                if (Engine.lastSignificantChar == ';')
                 {
                     while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
                     {
@@ -608,7 +608,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     The default state, used for the global space.
         /// </summary>
-        public static Func<IndentEngine, IndentState> Default = engine => Create<BlockBody>(engine);
+        public static Func<IndentEngine, IndentState> Default = engine => Create<GlobalBody>(engine);
     }
 
     #endregion
@@ -630,17 +630,38 @@ namespace ICSharpCode.NRefactory.CSharp
 
     #endregion
 
-    #region BlockBody state
+    #region BracketsBody state
 
     /// <summary>
-    ///     Block state.
+    ///     Brackets body state.
     /// </summary>
     /// <remarks>
-    ///     Represents a block of code between { and }.
+    ///     Represents a block of code between a pair of brackets.
     /// </remarks>
-    internal class BlockBody : IndentState
+    internal class BracketsBody : IndentState
     {
-        public BlockBody(IndentEngine engine, IndentState parent = null)
+        /// <summary>
+        ///     Defines transitions for all types of open brackets.
+        /// </summary>
+        internal static Dictionary<char, Action<IndentState>> OpenBrackets = 
+            new Dictionary<char, Action<IndentState>>
+        { 
+            { '{', state => state.ChangeState<BracesBody>() }, 
+            { '(', state => state.ChangeState<ParenthesesBody>() }, 
+            { '[', state => state.ChangeState<SquareBracketsBody>() }, 
+            { '<', state => state.ChangeState<AngleBracketsBody>() }
+        };
+
+        /// <summary>
+        ///     When derived in a concrete bracket body state, represents
+        ///     the closed bracket character pair.
+        /// </summary>
+        internal virtual char ClosedBracket 
+        { 
+            get { throw new NotImplementedException(); }
+        }
+
+        protected BracketsBody(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
         { }
 
@@ -675,32 +696,156 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 ChangeState<Character>();
             }
-            else if (ch == '{')
+            else if (OpenBrackets.ContainsKey(ch))
             {
-                ChangeState<BlockBody>();
+                OpenBrackets[ch](this);
             }
-            else if (ch == '}')
+            else if (ch == ClosedBracket)
             {
                 ExitState();
             }
         }
+    }
+
+    #region Global body state
+
+    /// <summary>
+    ///     Global body state.
+    /// </summary>
+    /// <remarks>
+    ///     Represents the global space of the program.
+    /// </remarks>
+    internal class GlobalBody : BracketsBody
+    {
+        internal override char ClosedBracket
+        {
+            get { return '\0'; }
+        }
+
+        public GlobalBody(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+    }
+
+    #endregion
+
+    #region Braces body state
+
+    /// <summary>
+    ///     Braces body state.
+    /// </summary>
+    /// <remarks>
+    ///     Represents a block of code between { and }.
+    /// </remarks>
+    internal class BracesBody : BracketsBody
+    {
+        internal override char ClosedBracket
+        {
+            get { return '}'; }
+        }
+
+        public BracesBody(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
 
         public override void InitializeState()
         {
-            if (Parent == null) // global space
-            {
-                base.InitializeState();
-            }
-            else
-            {
-                ThisLineIndent = Parent.ThisLineIndent.Clone();
-                NextLineIndent = ThisLineIndent.Clone();
-                AddIndentation(CurrentBody);
-            }
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = ThisLineIndent.Clone();
+            AddIndentation(CurrentBody);
         }
     }
 
-    #endregion 
+    #endregion
+
+    #region Parentheses body state
+
+    /// <summary>
+    ///     Parentheses body state.
+    /// </summary>
+    /// <remarks>
+    ///     Represents a block of code between ( and ).
+    /// </remarks>
+    internal class ParenthesesBody : BracketsBody
+    {
+        internal override char ClosedBracket
+        {
+	        get { return ')'; }
+        }
+
+        public ParenthesesBody(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+
+        public override void InitializeState()
+        {
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = ThisLineIndent.Clone();
+            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
+        }
+    }
+
+    #endregion
+
+    #region Square brackets body state
+
+    /// <summary>
+    ///     Square brackets body state.
+    /// </summary>
+    /// <remarks>
+    ///     Represents a block of code between [ and ].
+    /// </remarks>
+    internal class SquareBracketsBody : BracketsBody
+    {
+        internal override char ClosedBracket
+        {
+            get { return ']'; }
+        }
+
+        public SquareBracketsBody(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+
+        public override void InitializeState()
+        {
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = ThisLineIndent.Clone();
+            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
+        }
+    }
+
+    #endregion
+
+    #region Angle brackets body state
+
+    /// <summary>
+    ///     Angle brackets body state.
+    /// </summary>
+    /// <remarks>
+    ///     Represents a block of code between < and >.
+    /// </remarks>
+    internal class AngleBracketsBody : BracketsBody
+    {
+        internal override char ClosedBracket
+        {
+            get { return '>'; }
+        }
+
+        public AngleBracketsBody(IndentEngine engine, IndentState parent = null)
+            : base(engine, parent)
+        { }
+
+        public override void InitializeState()
+        {
+            ThisLineIndent = Parent.ThisLineIndent.Clone();
+            NextLineIndent = ThisLineIndent.Clone();
+            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
+        }
+    }
+
+    #endregion
+
+    #endregion
 
     #region PreProcessor state
 

@@ -8,9 +8,12 @@ namespace ICSharpCode.NRefactory.IndentationTests
         [Test]
         public void TestBlock_Simple()
         {
-            var indent = Helper.CreateEngine("namespace Foo {$");
-            Assert.AreEqual("", indent.ThisLineIndent);
-            Assert.AreEqual("\t", indent.NewLineIndent);
+            var code =
+@"namespace Foo {
+    class Foo {
+";
+            var indentationLevels = new int[] { 0, 4 };
+            Helper.Driver(code, indentationLevels);
         }
 
         [Test]
@@ -196,28 +199,28 @@ class Foo {
             Assert.AreEqual("\t", indent.NewLineIndent);
         }
 
-//        [Test]
-//        public void TestBlock_Parameters()
-//        {
-//            var indent = Helper.CreateEngine(@"
-//class Foo {
-//	void Test ()
-//	{
-//		Foo(true,$");
-//            Assert.AreEqual("\t\t", indent.ThisLineIndent);
-//            Assert.AreEqual("\t\t   ", indent.NewLineIndent);
-//        }
+        [Test]
+        public void TestBlock_Parameters()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Foo(true,$");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+        }
 
-//        [Test]
-//        public void TestBlock_Parameters2()
-//        {
-//            var indent = Helper.CreateEngine(@"
-//class Foo {
-//	void Test ()
-//	{
-//		Foo($");
-//            Assert.AreEqual("\t\t", indent.ThisLineIndent);
-//            Assert.AreEqual("\t\t\t", indent.NewLineIndent);
-//        }
+        [Test]
+        public void TestBlock_Parameters2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		Foo($");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+        }
     }
 }
