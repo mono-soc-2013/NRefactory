@@ -132,6 +132,7 @@ namespace ICSharpCode.NRefactory.CSharp
         internal int column = 1;
         internal bool isLineStart = true;
         internal char previousChar = '\0';
+        internal char lastSignificantChar = '\0';
 
         #endregion
 
@@ -184,8 +185,18 @@ namespace ICSharpCode.NRefactory.CSharp
             offset++;
             if (!Environment.NewLine.Contains(ch))
             {
-                isLineStart &= ch == ' ' || ch == '\t';
-                column++;
+                isLineStart &= char.IsWhiteSpace(ch);
+
+                if (ch == '\t')
+                {
+                    var nextTabStop = (column - 1 + TextEditorOptions.IndentSize) / TextEditorOptions.IndentSize;
+                    column = 1 + nextTabStop * TextEditorOptions.IndentSize;
+                    offset++;
+                }
+                else
+                {
+                    column++;
+                }
             }
             else
             {
@@ -201,6 +212,10 @@ namespace ICSharpCode.NRefactory.CSharp
 
             CurrentState.Push(ch);
             previousChar = ch;
+            if (!char.IsWhiteSpace(ch))
+            {
+                lastSignificantChar = ch;
+            }
         }
 
         public void UpdateToOffset(int toOffset)
