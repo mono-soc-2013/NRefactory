@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.Editor;
+using NUnit.Framework;
 using System.Text;
 
 namespace ICSharpCode.NRefactory.IndentationTests
@@ -29,6 +30,25 @@ namespace ICSharpCode.NRefactory.IndentationTests
             var result = new IndentEngine(document, options, policy);
             result.UpdateToOffset(offset);
             return result;
+        }
+
+        public static void Driver(string code, int[] indentationLevels)
+        {
+            var policy = FormattingOptionsFactory.CreateMono();
+            var document = new ReadOnlyDocument(code);
+            var options = new TextEditorOptions();
+            var engine = new IndentEngine(document, options, policy);
+
+            foreach (var ch in code)
+            {
+                if (ch == '\r')
+                {
+                    var indent = engine.ThisLineIndent.Replace("\t", "    ");
+                    Assert.AreEqual(indent.Length, indentationLevels[engine.Location.Line - 1]);
+                }
+
+                engine.Push(ch);
+            }
         }
     }
 }
