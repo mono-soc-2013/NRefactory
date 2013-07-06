@@ -445,7 +445,7 @@ namespace ICSharpCode.NRefactory.CSharp
             };
             var specials = new HashSet<string>
             {
-                "do", "if", "else", "for", "foreach", "while"
+                "do", "if", "else", "for", "foreach", "while", "lock", "using"
             };
 
             if (blocks.ContainsKey(keyword))
