@@ -14,7 +14,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
         }
 
         [Test]
-        public void TestPreProcessorComment_Simple()
+        public void TestPreProcessor_If()
         {
             var indent = Helper.CreateEngine(@"
 #if false
@@ -24,7 +24,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
         }
 
         [Test]
-        public void TestPreProcessorStatement_Simple()
+        public void TestPreProcessor_If2()
         {
             var indent = Helper.CreateEngine(@"
 #if true
@@ -39,7 +39,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
             var indent = Helper.CreateEngine(@"
 namespace Foo {
     class Foo {
-#if bla
+#if false
         { $");
             Assert.AreEqual("\t\t", indent.ThisLineIndent);
             Assert.AreEqual("\t\t", indent.NewLineIndent);
@@ -87,6 +87,38 @@ namespace Foo {
     $");
             Assert.AreEqual("\t", indent.ThisLineIndent);
             Assert.AreEqual("\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestPreProcessor_Else()
+        {
+            var indent = Helper.CreateEngine(@"
+namespace Foo {
+    class Foo {
+#if false
+        {
+#else
+    }
+#endif
+    $");
+            Assert.AreEqual("\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestPreProcessor_Else2()
+        {
+            var indent = Helper.CreateEngine(@"
+namespace Foo {
+    class Foo {
+#if true
+        {
+#else
+        } 
+#endif
+            $");
+            Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t\t", indent.NewLineIndent);
         }
 
         #region Single-line directives
@@ -182,5 +214,36 @@ namespace Foo {
         }
 
         #endregion
+
+        [Test]
+        public void TestBrackets_PreProcessor_If_DefineDirective()
+        {
+            var indent = Helper.CreateEngine(@"
+#define NOTTHERE
+namespace Foo {
+	class Foo {
+#if NOTTHERE
+	    {
+#endif
+		$");
+            Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_PreProcessor_If_UndefDirective()
+        {
+            var indent = Helper.CreateEngine(@"
+#define NOTTHERE
+namespace Foo {
+	class Foo {
+#undef NOTTHERE
+#if NOTTHERE
+	    {
+#endif
+		$");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
     }
 }

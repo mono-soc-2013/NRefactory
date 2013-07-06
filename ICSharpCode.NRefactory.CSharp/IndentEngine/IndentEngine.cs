@@ -43,11 +43,6 @@ namespace ICSharpCode.NRefactory.CSharp
         #region Properties
 
         /// <summary>
-        ///     Stores conditional symbols for preprocessor directives.
-        /// </summary>
-        public IList<string> ConditionalSymbols = new List<string>();
-
-        /// <summary>
         ///     Document that's parsed by the engine.
         /// </summary>
         internal readonly IDocument Document;
@@ -133,6 +128,17 @@ namespace ICSharpCode.NRefactory.CSharp
             }
         }
 
+        /// <summary>
+        ///     Stores conditional symbols of the #define directives.
+        /// </summary>
+        internal HashSet<string> ConditionalSymbols = new HashSet<string>();
+
+        /// <summary>
+        ///     True if any of the preprocessor if/elif directives in the last
+        ///     block (from #if to #endif) were evaluated to true.
+        /// </summary>
+        internal bool IfDirectiveEvalResult;
+
         #endregion
 
         #region Fields
@@ -161,9 +167,8 @@ namespace ICSharpCode.NRefactory.CSharp
             this.Options = prototype.Options;
             this.TextEditorOptions = prototype.TextEditorOptions;
             this.CurrentState = prototype.CurrentState.Clone();
-            this.ConditionalSymbols = prototype.ConditionalSymbols
-                                               .Select(s => s)
-                                               .ToList();
+            this.ConditionalSymbols = new HashSet<string>(prototype.ConditionalSymbols);
+            this.IfDirectiveEvalResult = prototype.IfDirectiveEvalResult;
             this.offset = prototype.offset;
             this.line = prototype.line;
             this.column = prototype.column;
@@ -190,7 +195,8 @@ namespace ICSharpCode.NRefactory.CSharp
         public void Reset()
         {
             CurrentState = IndentStateFactory.Default(this);
-            ConditionalSymbols = new List<string>();
+            ConditionalSymbols = new HashSet<string>();
+            IfDirectiveEvalResult = false;
 
             offset = 0;
             line = 1;

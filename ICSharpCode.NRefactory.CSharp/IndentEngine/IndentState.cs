@@ -707,10 +707,10 @@ namespace ICSharpCode.NRefactory.CSharp
         internal PreProcessorDirective DirectiveType = PreProcessorDirective.None;
 
         /// <summary>
-        ///     If <see cref="DirectiveType"/> is If or Elif, this
+        ///     If <see cref="DirectiveType"/> is set (not equal to 'None'), this
         ///     stores the expression of the directive.
         /// </summary>
-        internal StringBuilder IfDirectiveStatement = new StringBuilder();
+        internal StringBuilder DirectiveStatement = new StringBuilder();
 
         public PreProcessor(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
@@ -720,56 +720,75 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (DirectiveType == PreProcessorDirective.If ||
-                DirectiveType == PreProcessorDirective.Elif)
+            if (DirectiveType != PreProcessorDirective.None)
             {
-                IfDirectiveStatement.Append(ch);
+                DirectiveStatement.Append(ch);
             }
 
-            switch (DirectiveType)
+            if (ch == Engine.NewLineChar)
             {
-                case PreProcessorDirective.If:
-                case PreProcessorDirective.Elif:
-                    if (ch == Engine.NewLineChar)
-                    {
-                        if (eval(IfDirectiveStatement.ToString()))
+                ExitState();
+
+                switch (DirectiveType)
+                {
+                    case PreProcessorDirective.If:
+                        if (!Engine.IfDirectiveEvalResult)
                         {
-                            // the if directive is true -> continue with the previous state
-                            ExitState();
+                            Engine.IfDirectiveEvalResult = eval(DirectiveStatement.ToString());
+                            if (Engine.IfDirectiveEvalResult)
+                            {
+                                // the if/elif directive is true -> continue with the previous state
+                            }
+                            else
+                            {
+                                // the if/elif directive is false -> change to a state that will 
+                                // ignore any chars until #endif or #elif
+                                ChangeState<PreProcessorComment>();
+                            }
                         }
                         else
                         {
-                            // the if directive is false -> change to a state that will 
-                            // ignore any chars until #endif or #elif
-                            ExitState();
+                            // one of the if/elif directives was true -> change to a state that will 
+                            // ignore any chars until #endif
                             ChangeState<PreProcessorComment>();
                         }
-                    }
-                    break;
-                case PreProcessorDirective.Else:
-                    // TODO: was the last #if or #elif true?
-                    ExitState();
-                    ChangeState<PreProcessorComment>();
-                    break;
-                case PreProcessorDirective.Endif:
-                    ExitState();
-                    break;
-                case PreProcessorDirective.Region:
-                case PreProcessorDirective.EndRegion:
-                    ExitState();
-                    ChangeState<Region>();
-                    break;
-                case PreProcessorDirective.Pragma:
-                case PreProcessorDirective.Warning:
-                case PreProcessorDirective.Error:
-                case PreProcessorDirective.Line:
-                case PreProcessorDirective.Define:
-                case PreProcessorDirective.Undef:
-                    // TODO: Make a seperate state for define and undef so that the
-                    //       #if directive can correctly determine if it's true
-                    ExitState();
-                    ChangeState<PreProcessorStatement>();
-                    break;
+                        break;
+                    case PreProcessorDirective.Else:
+                        if (Engine.IfDirectiveEvalResult)
+                        {
+                            // some if/elif directive was true -> change to a state that will 
+                            // ignore any chars until #endif
+                            ChangeState<PreProcessorComment>();
+                        }
+                        else
+                        {
+                            // none if/elif directives were true -> continue with the previous state
+                        }
+                        break;
+                    case PreProcessorDirective.Define:
+                        var defineSymbol = DirectiveStatement.ToString().Trim();
+                        if (!Engine.ConditionalSymbols.Contains(defineSymbol))
+                        {
+                            Engine.ConditionalSymbols.Add(defineSymbol);
+                        }
+                        break;
+                    case PreProcessorDirective.Undef:
+                        var undefineSymbol = DirectiveStatement.ToString().Trim();
+                        if (Engine.ConditionalSymbols.Contains(undefineSymbol))
+                        {
+                            Engine.ConditionalSymbols.Remove(undefineSymbol);
+                        }
+                        break;
+                    case PreProcessorDirective.Endif:
+                        Engine.IfDirectiveEvalResult = false;
+                        break;
+                    case PreProcessorDirective.Region:
+                    case PreProcessorDirective.Pragma:
+                    case PreProcessorDirective.Warning:
+                    case PreProcessorDirective.Error:
+                    case PreProcessorDirective.Line:
+                        break;
+                }
             }
         }
 
@@ -790,11 +809,11 @@ namespace ICSharpCode.NRefactory.CSharp
             var preProcessorDirectives = new Dictionary<string, PreProcessorDirective>
             {
                 { "if", PreProcessorDirective.If },
-                { "elif", PreProcessorDirective.Elif },
+                { "elif", PreProcessorDirective.If },
                 { "else", PreProcessorDirective.Else },
                 { "endif", PreProcessorDirective.Endif },
                 { "region", PreProcessorDirective.Region },
-                { "endregion", PreProcessorDirective.EndRegion },
+                { "endregion", PreProcessorDirective.Region },
                 { "pragma", PreProcessorDirective.Pragma },
                 { "warning", PreProcessorDirective.Warning },
                 { "error", PreProcessorDirective.Error },
@@ -806,6 +825,12 @@ namespace ICSharpCode.NRefactory.CSharp
             if (preProcessorDirectives.ContainsKey(keyword))
             {
                 DirectiveType = preProcessorDirectives[keyword];
+
+                if (DirectiveType == PreProcessorDirective.Region)
+                {
+                    // adjust the indentation for the region/endregion directives
+                    ThisLineIndent = Parent.NextLineIndent.Clone();
+                }
             }
         }
 
@@ -815,17 +840,17 @@ namespace ICSharpCode.NRefactory.CSharp
         internal enum PreProcessorDirective
         {
             None,
-            If, 
-            Elif, 
-            Else, 
-            Endif, 
-            Region, 
-            EndRegion, 
-            Pragma, 
+            If,
+            // Elif,
+            Else,
+            Endif,
+            Region,
+            // EndRegion,
+            Pragma,
             Warning, 
-            Error, 
-            Line, 
-            Define, 
+            Error,
+            Line,
+            Define,
             Undef
         }
 
@@ -1065,72 +1090,6 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 ExitState();
                 ChangeState<PreProcessor>();
-            }
-        }
-
-        public override void InitializeState()
-        {
-            ThisLineIndent = Parent.NextLineIndent.Clone();
-            NextLineIndent = ThisLineIndent.Clone();
-        }
-    }
-
-    #endregion
-
-    #region PreProcessorStatement state
-
-    /// <summary>
-    ///     PreProcessor single-line directives state.
-    /// </summary>
-    /// <remarks>
-    ///     e.g. pragma, warning, region, define...
-    /// </remarks>
-    internal class PreProcessorStatement : IndentState
-    {
-        public PreProcessorStatement(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
-        { }
-
-        public override void Push(char ch)
-        {
-            base.Push(ch);
-
-            if (ch == Engine.NewLineChar)
-            {
-                ExitState();
-            }
-        }
-
-        public override void InitializeState()
-        {
-            ThisLineIndent = new Indent(Engine.TextEditorOptions);
-            NextLineIndent = Parent.NextLineIndent.Clone();
-        }
-    }
-
-    #endregion
-
-    #region Region state
-
-    /// <summary>
-    ///     Region directive state.
-    /// </summary>
-    /// <remarks>
-    ///     Activates on #region or #endregion
-    /// </remarks>
-    internal class Region : IndentState
-    {
-        public Region(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
-        { }
-
-        public override void Push(char ch)
-        {
-            base.Push(ch);
-
-            if (ch == Engine.NewLineChar)
-            {
-                ExitState();
             }
         }
 
