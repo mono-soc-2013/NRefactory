@@ -552,6 +552,11 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </remarks>
     internal class BracesBody : BracketsBodyBase
     {
+        /// <summary>
+        ///     True if the '=' char has been pushed.
+        /// </summary>
+        internal bool IsRightHandExpression;
+
         internal override char ClosedBracket
         {
             get { return '}'; }
@@ -569,6 +574,16 @@ namespace ICSharpCode.NRefactory.CSharp
                 {
                     NextLineIndent.Pop();
                 }
+                NextLineIndent.ExtraSpaces = 0;
+            }
+            else if (ch == '=' && !IsRightHandExpression)
+            {
+                IsRightHandExpression = true;
+                NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent;
+            }
+            else if (ch == '.')
+            {
+                NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 2;
             }
 
             base.Push(ch);

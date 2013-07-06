@@ -17,7 +17,7 @@ namespace Foo {
         }
 
         [Test]
-        public void TestBrackets_PreProcessor()
+        public void TestBrackets_PreProcessor_If()
         {
             var indent = Helper.CreateEngine(@"
 namespace Foo {
@@ -31,7 +31,7 @@ namespace Foo {
         }
 
         [Test]
-        public void TestBrackets_PreProcessor_IfStatement()
+        public void TestBrackets_PreProcessor_If2()
         {
             var indent = Helper.CreateEngine(@"
 namespace Foo {
@@ -294,7 +294,7 @@ class Foo {
 	void Test ()
 	{
 		var v = [a, b, c, // ]
-                 d] $");
+                 d]; $");
             Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
             Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
@@ -338,6 +338,59 @@ class Foo {
             f);");
             Assert.AreEqual("\t\t              ", indent.ThisLineIndent);
             Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_RightHandExpression()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		var v = from i in I
+                where i == ';'
+                select i; $");
+            Assert.AreEqual("\t\t        ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_DotExpression()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		var v = I.Where(i => i == ';')
+                 .Select(i => i); $");
+            Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_LambdaExpression()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		var v = () => { $
+        };");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_LambdaExpression2()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		var v = () => {
+        }; $");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
     }
 }
