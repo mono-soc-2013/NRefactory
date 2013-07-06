@@ -34,7 +34,7 @@ namespace ICSharpCode.NRefactory.CSharp
     #region IndentState
 
     /// <summary>
-    ///     The base class for indentation states. 
+    ///     The base class for all indentation states. 
     ///     Each state defines the logic for indentation based on chars that
     ///     are pushed to it.
     /// </summary>
@@ -54,6 +54,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     The parent state. 
         ///     This state can use the indentation levels of its parent.
+        ///     When this state exits, the engine returns to the parent.
         /// </summary>
         public IndentState Parent;
 
@@ -131,7 +132,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
         /// <summary>
         ///     Initializes the state:
-        ///       - sets the indentation levels.
+        ///       - sets the default indentation levels.
         /// </summary>
         /// <remarks>
         ///     Each state can override this method if it needs a different
@@ -154,12 +155,12 @@ namespace ICSharpCode.NRefactory.CSharp
             // know that the engine isn't on the same line anymore.
             if (Engine.isLineStart && Engine.column == 1)
             {
-                Parent.Push(Environment.NewLine.First());
+                Parent.Push(Engine.NewLineChar);
             }
         }
 
         /// <summary>
-        ///     Changes the current <see cref="IndentEngine"/> state using the current
+        ///     Changes the current state of the <see cref="IndentEngine"/> using the current
         ///     state as the parent for the new one.
         /// </summary>
         /// <typeparam name="T">
@@ -172,8 +173,8 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     Exits this state by setting the current <see cref="IndentEngine"/>
-        ///     state to the its parent.
+        ///     Exits this state by setting the current state of the
+        ///     <see cref="IndentEngine"/> to the its parent.
         /// </summary>
         public virtual void ExitState()
         {
@@ -183,7 +184,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
         /// <summary>
         ///     Common logic behind the push method.
-        ///     Each state derives this method and implements its own logic.
+        ///     Each state can override this method and implement its own logic.
         /// </summary>
         /// <param name="ch">
         ///     The current character that's being pushed.
@@ -200,14 +201,14 @@ namespace ICSharpCode.NRefactory.CSharp
                 WordToken.Length = 0;
             }
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ThisLineIndent = NextLineIndent.Clone();
             }
         }
 
         /// <summary>
-        ///     When derived, checks if the current sequence of chars form
+        ///     When derived, checks if the given sequence of chars form
         ///     a valid keyword or variable name, depending on the state.
         /// </summary>
         /// <param name="keyword">
@@ -321,7 +322,7 @@ namespace ICSharpCode.NRefactory.CSharp
     #region Brackets body base
 
     /// <summary>
-    ///     The base for brackets body states.
+    ///     The base for all brackets body states.
     /// </summary>
     /// <remarks>
     ///     Represents a block of code between a pair of brackets.
@@ -369,14 +370,6 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void Push(char ch)
         {
-            if (Environment.NewLine.Contains(ch) && Engine.lastSignificantChar == ';')
-            {
-                while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
-                {
-                    NextLineIndent.Pop();
-                }
-            } 
-
             base.Push(ch);
 
             if (ch == '#' && Engine.isLineStart)
@@ -568,6 +561,19 @@ namespace ICSharpCode.NRefactory.CSharp
             : base(engine, parent)
         { }
 
+        public override void Push(char ch)
+        {
+            if (ch == ';')
+            {
+                while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
+                {
+                    NextLineIndent.Pop();
+                }
+            }
+
+            base.Push(ch);
+        }
+
         public override void InitializeState()
         {
             ThisLineIndent = Parent.ThisLineIndent.Clone();
@@ -724,7 +730,7 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 case PreProcessorDirective.If:
                 case PreProcessorDirective.Elif:
-                    if (Environment.NewLine.Contains(ch))
+                    if (ch == Engine.NewLineChar)
                     {
                         if (eval(IfDirectiveStatement.ToString()))
                         {
@@ -743,6 +749,7 @@ namespace ICSharpCode.NRefactory.CSharp
                 case PreProcessorDirective.Else:
                     // TODO: was the last #if or #elif true?
                     ExitState();
+                    ChangeState<PreProcessorComment>();
                     break;
                 case PreProcessorDirective.Endif:
                     ExitState();
@@ -1088,7 +1095,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ExitState();
             }
@@ -1121,7 +1128,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ExitState();
             }
@@ -1177,7 +1184,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ExitState();
             }
@@ -1209,7 +1216,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ExitState();
             }
@@ -1277,7 +1284,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ExitState();
             }
@@ -1363,7 +1370,7 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (Environment.NewLine.Contains(ch))
+            if (ch == Engine.NewLineChar)
             {
                 ExitState();
             }

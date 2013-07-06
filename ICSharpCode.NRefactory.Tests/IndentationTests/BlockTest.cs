@@ -177,6 +177,30 @@ $");
         }
 
         [Test]
+        public void TestBrackets_NestedDoContinuation_ExpressionEnded()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		do do do foo(); $");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
+        public void TestBrackets_NestedDoContinuation_ExpressionNotEnded()
+        {
+            var indent = Helper.CreateEngine(@"
+class Foo {
+	void Test ()
+	{
+		do do do foo() $");
+            Assert.AreEqual("\t\t", indent.ThisLineIndent);
+            Assert.AreEqual("\t\t\t\t\t", indent.NewLineIndent);
+        }
+
+        [Test]
         public void TestBrackets_ThisLineIndentAfterCurlyBrace()
         {
             var indent = Helper.CreateEngine(@"

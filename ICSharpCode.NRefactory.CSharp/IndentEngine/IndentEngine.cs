@@ -63,6 +63,17 @@ namespace ICSharpCode.NRefactory.CSharp
         internal readonly TextEditorOptions TextEditorOptions;
 
         /// <summary>
+        ///     Represents the new line character.
+        /// </summary>
+        internal char NewLineChar
+        {
+            get
+            {
+                return TextEditorOptions.EolMarker[0];
+            }
+        }
+
+        /// <summary>
         ///     The current indentation state.
         /// </summary>
         internal IndentState CurrentState;
@@ -131,7 +142,6 @@ namespace ICSharpCode.NRefactory.CSharp
         internal int column = 1;
         internal bool isLineStart = true;
         internal char previousChar = '\0';
-        internal char lastSignificantChar = '\0';
 
         #endregion
 
@@ -175,6 +185,21 @@ namespace ICSharpCode.NRefactory.CSharp
         #region Methods
 
         /// <summary>
+        ///     Resets the engine.
+        /// </summary>
+        public void Reset()
+        {
+            CurrentState = IndentStateFactory.Default(this);
+            ConditionalSymbols = new List<string>();
+
+            offset = 0;
+            line = 1;
+            column = 1;
+            isLineStart = true;
+            previousChar = '\0';
+        }
+
+        /// <summary>
         ///     Pushes a new char into the current state which calculates the new
         ///     indentation level.
         /// </summary>
@@ -184,7 +209,7 @@ namespace ICSharpCode.NRefactory.CSharp
         public void Push(char ch)
         {
             offset++;
-            if (!Environment.NewLine.Contains(ch))
+            if (!TextEditorOptions.EolMarker.Contains(ch))
             {
                 if (ch == '\t')
                 {
@@ -199,11 +224,7 @@ namespace ICSharpCode.NRefactory.CSharp
             }
             else
             {
-                // the current implementation accepts any caracter in Environment.NewLine
-                // as the newline character. This tries to prevent pushing multiple newline 
-                // chars in a row when only one newline is intended by the user.
-                // TODO: Find a better solution.
-                if (Environment.NewLine.Contains(previousChar) && previousChar != ch)
+                if (ch != NewLineChar)
                 {
                     return;
                 }
@@ -216,16 +237,16 @@ namespace ICSharpCode.NRefactory.CSharp
             CurrentState.Push(ch);
 
             isLineStart &= char.IsWhiteSpace(ch);
-
             previousChar = ch;
-            if (!char.IsWhiteSpace(ch))
-            {
-                lastSignificantChar = ch;
-            }
         }
 
         public void UpdateToOffset(int toOffset)
         {
+            if (toOffset < offset)
+            {
+                Reset();
+            }
+
             for (int i = offset; i < toOffset; i++)
             {
                 Push(Document.GetCharAt(i));
