@@ -27,6 +27,7 @@ using ICSharpCode.NRefactory.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
@@ -124,9 +125,14 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             get
             {
-                throw new NotImplementedException();
+                return !isLineStart && (ThisLineIndent != CurrentIndent.ToString());
             }
         }
+
+        /// <summary>
+        ///     Stores the current indent on the beginning of the current line.
+        /// </summary>
+        internal StringBuilder CurrentIndent = new StringBuilder();
 
         /// <summary>
         ///     Stores conditional symbols of the #define directives.
@@ -169,6 +175,8 @@ namespace ICSharpCode.NRefactory.CSharp
             this.CurrentState = prototype.CurrentState.Clone();
             this.ConditionalSymbols = new HashSet<string>(prototype.ConditionalSymbols);
             this.IfDirectiveEvalResult = prototype.IfDirectiveEvalResult;
+            this.CurrentIndent = new StringBuilder(prototype.CurrentIndent.ToString());
+
             this.offset = prototype.offset;
             this.line = prototype.line;
             this.column = prototype.column;
@@ -195,8 +203,9 @@ namespace ICSharpCode.NRefactory.CSharp
         public void Reset()
         {
             CurrentState = IndentStateFactory.Default(this);
-            ConditionalSymbols = new HashSet<string>();
+            ConditionalSymbols.Clear();
             IfDirectiveEvalResult = false;
+            CurrentIndent.Clear();
 
             offset = 0;
             line = 1;
@@ -226,6 +235,11 @@ namespace ICSharpCode.NRefactory.CSharp
                 else
                 {
                     column++;
+                }
+
+                if (char.IsWhiteSpace(ch) && isLineStart)
+                {
+                    CurrentIndent.Append(ch);
                 }
             }
             else
