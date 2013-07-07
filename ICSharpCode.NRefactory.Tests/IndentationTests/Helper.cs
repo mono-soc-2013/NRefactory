@@ -1,6 +1,7 @@
 ﻿using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.Editor;
 using NUnit.Framework;
+using System.IO;
 using System.Text;
 
 namespace ICSharpCode.NRefactory.IndentationTests
@@ -32,22 +33,29 @@ namespace ICSharpCode.NRefactory.IndentationTests
             return result;
         }
 
-        public static void Driver(string code, int[] indentationLevels)
+        public static void ReadAndTest(string filePath)
         {
-            var policy = FormattingOptionsFactory.CreateMono();
-            var document = new ReadOnlyDocument(code);
-            var options = new TextEditorOptions();
-            var engine = new IndentEngine(document, options, policy);
-
-            foreach (var ch in code)
+            if (File.Exists(filePath))
             {
-                if (ch == '\r')
-                {
-                    var indent = engine.ThisLineIndent.Replace("\t", "    ");
-                    Assert.AreEqual(indent.Length, indentationLevels[engine.Location.Line - 1]);
-                }
+                var code = File.ReadAllText(filePath);
+                var policy = FormattingOptionsFactory.CreateMono();
+                var document = new ReadOnlyDocument(code);
+                var options = new TextEditorOptions { TabsToSpaces = true };
+                var engine = new IndentEngine(document, options, policy);
 
-                engine.Push(ch);
+                engine.OnThisLineIndentChanged += (sender, args) =>
+                {
+                    var e = (IndentEngine)sender;
+                    Assert.IsFalse(e.NeedsReindent,
+                            string.Format("Line: {0}, Indent: {1}, Current indent: {2}",
+                            e.Location.Line.ToString(), engine.ThisLineIndent.Length, engine.CurrentIndent.Length));
+                };
+
+                engine.UpdateToOffset(code.Length);
+            }
+            else
+            {
+                Assert.Fail("File " + filePath + " doesn't exist.");
             }
         }
     }

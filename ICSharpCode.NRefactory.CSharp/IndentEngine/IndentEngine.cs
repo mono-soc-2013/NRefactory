@@ -61,7 +61,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     Represents the new line character.
         /// </summary>
-        internal char NewLineChar
+        public char NewLineChar
         {
             get
             {
@@ -125,14 +125,19 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             get
             {
-                return !isLineStart && (ThisLineIndent != CurrentIndent.ToString());
+                return !IsLineStart && (ThisLineIndent != CurrentIndent.ToString());
             }
         }
 
         /// <summary>
+        ///     Raised when <see cref="ThisLineIndent"/> has changed.
+        /// </summary>
+        public event EventHandler OnThisLineIndentChanged;
+
+        /// <summary>
         ///     Stores the current indent on the beginning of the current line.
         /// </summary>
-        internal StringBuilder CurrentIndent = new StringBuilder();
+        public StringBuilder CurrentIndent = new StringBuilder();
 
         /// <summary>
         ///     Stores conditional symbols of the #define directives.
@@ -152,8 +157,10 @@ namespace ICSharpCode.NRefactory.CSharp
         internal int offset = 0;
         internal int line = 1;
         internal int column = 1;
-        internal bool isLineStart = true;
-        internal char previousChar = '\0';
+
+        public bool IsLineStart = true;
+        public char CurrentChar = '\0';
+        public char PreviousChar = '\0';
 
         #endregion
 
@@ -180,8 +187,9 @@ namespace ICSharpCode.NRefactory.CSharp
             this.offset = prototype.offset;
             this.line = prototype.line;
             this.column = prototype.column;
-            this.isLineStart = prototype.isLineStart;
-            this.previousChar = prototype.previousChar;
+            this.IsLineStart = prototype.IsLineStart;
+            this.CurrentChar = prototype.CurrentChar;
+            this.PreviousChar = prototype.PreviousChar;
         }
 
         #endregion
@@ -210,8 +218,19 @@ namespace ICSharpCode.NRefactory.CSharp
             offset = 0;
             line = 1;
             column = 1;
-            isLineStart = true;
-            previousChar = '\0';
+            IsLineStart = true;
+            PreviousChar = '\0';
+        }
+
+        /// <summary>
+        ///     Calls the <see cref="OnThisLineIndentChanged"/> event.
+        /// </summary>
+        internal void ThisLineIndentChanged()
+        {
+            if (OnThisLineIndentChanged != null)
+            {
+                OnThisLineIndentChanged(this, EventArgs.Empty);
+            }
         }
 
         /// <summary>
@@ -223,9 +242,19 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </param>
         public void Push(char ch)
         {
-            offset++;
+            CurrentChar = ch;
+
+            CurrentState.Push(ch);
+
             if (!TextEditorOptions.EolMarker.Contains(ch))
             {
+                IsLineStart &= char.IsWhiteSpace(ch);
+
+                if (IsLineStart)
+                {
+                    CurrentIndent.Append(ch);
+                }
+
                 if (ch == '\t')
                 {
                     var nextTabStop = (column - 1 + TextEditorOptions.IndentSize) / TextEditorOptions.IndentSize;
@@ -236,11 +265,6 @@ namespace ICSharpCode.NRefactory.CSharp
                 {
                     column++;
                 }
-
-                if (char.IsWhiteSpace(ch) && isLineStart)
-                {
-                    CurrentIndent.Append(ch);
-                }
             }
             else
             {
@@ -249,15 +273,14 @@ namespace ICSharpCode.NRefactory.CSharp
                     return;
                 }
 
-                isLineStart = true;
+                CurrentIndent.Clear();
+                IsLineStart = true;
                 column = 1;
                 line++;
             }
 
-            CurrentState.Push(ch);
-
-            isLineStart &= char.IsWhiteSpace(ch);
-            previousChar = ch;
+            offset++;
+            PreviousChar = ch;
         }
 
         public void UpdateToOffset(int toOffset)
