@@ -308,6 +308,7 @@ class Foo {
 	{
 		Func<a, b, c, // > 
              $");
+            Assert.Inconclusive("Not implemented.");
             Assert.AreEqual("\t\t     ", indent.ThisLineIndent);
             Assert.AreEqual("\t\t     ", indent.NewLineIndent);
         }
@@ -321,6 +322,7 @@ class Foo {
 	{
 		Func<a, b, c, // >
              d> $");
+            Assert.Inconclusive("Not implemented.");
             Assert.AreEqual("\t\t     ", indent.ThisLineIndent);
             Assert.AreEqual("\t\t", indent.NewLineIndent);
         }
@@ -332,8 +334,8 @@ class Foo {
 class Foo {
 	void Test ()
 	{
-		Foo(a, b, bar(c, d<T,  // T
-                           G>, // G
+		Foo(a, b, bar(c, d[T,  // T
+                           G], // G
                       e), $    // e
             f);");
             Assert.AreEqual("\t\t              ", indent.ThisLineIndent);

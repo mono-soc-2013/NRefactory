@@ -140,8 +140,8 @@ namespace ICSharpCode.NRefactory.CSharp
         internal HashSet<string> ConditionalSymbols = new HashSet<string>();
 
         /// <summary>
-        ///     True if any of the preprocessor if/elif directives in the last
-        ///     block (from #if to #endif) were evaluated to true.
+        ///     True if any of the preprocessor if/elif directives in the current
+        ///     block (between #if and #endif) were evaluated to true.
         /// </summary>
         internal bool IfDirectiveEvalResult;
 
