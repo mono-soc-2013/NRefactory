@@ -43,7 +43,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
                 var options = new TextEditorOptions { TabsToSpaces = true };
                 var engine = new IndentEngine(document, options, policy);
 
-                engine.OnThisLineIndentChanged += (sender, args) =>
+                engine.OnThisLineIndentFinalized += (sender, args) =>
                 {
                     var e = (IndentEngine)sender;
                     Assert.IsFalse(e.NeedsReindent,

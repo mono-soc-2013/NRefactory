@@ -199,6 +199,8 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </param>
         public virtual void Push(char ch)
         {
+            // append this char to a wordbuf if it can form a valid keyword, otherwise check
+            // if the last sequence of chars form a valid keyword and reset the wordbuf.
             if ((WordToken.Length == 0 ? char.IsLetter(ch) : char.IsLetterOrDigit(ch)) || ch == '_')
             {
                 WordToken.Append(ch);
@@ -220,7 +222,7 @@ namespace ICSharpCode.NRefactory.CSharp
                     // methods on the same newline char, but only the current state of
                     // the engine should raise this event. See the OnExit method for
                     // an example when this will happen.
-                    Engine.ThisLineIndentChanged();
+                    Engine.ThisLineIndentFinalized();
                 }
                 
                 ThisLineIndent = NextLineIndent.Clone();
@@ -526,6 +528,12 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void InitializeState()
         {
+            // remove all continuations from the previous state
+            if (Parent.NextLineIndent.Count > 0 && Parent.NextLineIndent.Peek() == IndentType.Continuation)
+            {
+                Parent.NextLineIndent.Pop();
+                Parent.ThisLineIndent = Parent.NextLineIndent.Clone();
+            }
             ThisLineIndent = Parent.ThisLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
             AddIndentation(CurrentBody);
@@ -666,7 +674,8 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             ThisLineIndent = Parent.ThisLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
-            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent;
+            // align the next line at the beginning of the open bracket
+            NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
         }
     }
 
@@ -695,7 +704,8 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             ThisLineIndent = Parent.ThisLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
-            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent;
+            // align the next line at the beginning of the open bracket
+            NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
         }
     }
 
@@ -724,7 +734,8 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             ThisLineIndent = Parent.ThisLineIndent.Clone();
             NextLineIndent = ThisLineIndent.Clone();
-            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent;
+            // align the next line at the beginning of the open bracket
+            NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
         }
     }
 
@@ -1114,7 +1125,7 @@ namespace ICSharpCode.NRefactory.CSharp
     #region PreProcessorComment state
 
     /// <summary>
-    ///     PreProcessor comment directive state.
+    ///     PreProcessor comment state.
     /// </summary>
     /// <remarks>
     ///     Activates when the #if or #elif directive is false and ignores
@@ -1133,7 +1144,7 @@ namespace ICSharpCode.NRefactory.CSharp
             if (ch == '#' && Engine.IsLineStart)
             {
                 // TODO: Return back only on #if/#elif/#else/#endif
-                //       Ignore any of the other directives (like #define)
+                // Ignore any of the other directives (especially #define/#undef)
                 ExitState();
                 ChangeState<PreProcessor>();
             }
@@ -1237,6 +1248,16 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </summary>
     internal class MultiLineComment : CommentBase
     {
+        /// <summary>
+        ///     True if any char has been pushed to this state.
+        /// </summary>
+        /// <remarks>
+        ///     Needed to resolve an issue when the first pushed char is '/'.
+        ///     The state would falsely exit on this sequence of chars '/*/',
+        ///     since it only checks if the last two chars are '/' and '*'.
+        /// </remarks>
+        internal bool IsAnyCharPushed;
+
         public MultiLineComment(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
         { }
@@ -1245,10 +1266,12 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             base.Push(ch);
 
-            if (ch == '/' && Engine.PreviousChar == '*')
+            if (ch == '/' && Engine.PreviousChar == '*' && IsAnyCharPushed)
             {
                 ExitState();
             }
+
+            IsAnyCharPushed = true;
         }
 
         public override void InitializeState()
@@ -1257,7 +1280,7 @@ namespace ICSharpCode.NRefactory.CSharp
             NextLineIndent = ThisLineIndent.Clone();
             // add extra spaces so that the next line of the comment is align
             // to the first character in the first line of the comment
-            NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent + 1;
+            NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent + 1);
         }
     }
 
@@ -1312,7 +1335,7 @@ namespace ICSharpCode.NRefactory.CSharp
     internal class VerbatimString : IndentState
     {
         /// <summary>
-        ///     True if there are odd number of '"' in a row.
+        ///     True if there is an odd number of '"' in a row.
         /// </summary>
         internal bool IsEscaped;
 

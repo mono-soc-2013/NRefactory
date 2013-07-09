@@ -121,6 +121,14 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     True if the current line needs to be reindented.
         /// </summary>
+        /// <remarks>
+        ///     This is set depending on the current <see cref="Location"/> and
+        ///     can change its value until the <see cref="NewLineChar"/> char is
+        ///     pushed. If this is true, that doesn't necessarily mean that the
+        ///     current line has an incorrect indent (this can be determined
+        ///     only at the end of the current line and the
+        ///     <see cref="OnThisLineIndentFinalized"/> event will be raised.
+        /// </remarks>
         public bool NeedsReindent
         {
             get
@@ -130,9 +138,15 @@ namespace ICSharpCode.NRefactory.CSharp
         }
 
         /// <summary>
-        ///     Raised when <see cref="ThisLineIndent"/> has changed.
+        ///     Raised when the <see cref="NewLineChar"/> is pushed to the engine
+        ///     and <see cref="ThisLineIndent"/> will no longer change.
         /// </summary>
-        public event EventHandler OnThisLineIndentChanged;
+        /// <remarks>
+        ///     This is the only way to correctly get the calculated indent
+        ///     since the <see cref="ThisLineIndent"/> is immediately
+        ///     replaced with <see cref="NewLineIndent"/> afterwards.
+        /// </remarks>
+        public event EventHandler OnThisLineIndentFinalized;
 
         /// <summary>
         ///     Stores the current indent on the beginning of the current line.
@@ -219,17 +233,18 @@ namespace ICSharpCode.NRefactory.CSharp
             line = 1;
             column = 1;
             IsLineStart = true;
+            CurrentChar = '\0';
             PreviousChar = '\0';
         }
 
         /// <summary>
-        ///     Calls the <see cref="OnThisLineIndentChanged"/> event.
+        ///     Calls the <see cref="OnThisLineIndentFinalized"/> event.
         /// </summary>
-        internal void ThisLineIndentChanged()
+        internal void ThisLineIndentFinalized()
         {
-            if (OnThisLineIndentChanged != null)
+            if (OnThisLineIndentFinalized != null)
             {
-                OnThisLineIndentChanged(this, EventArgs.Empty);
+                OnThisLineIndentFinalized(this, EventArgs.Empty);
             }
         }
 
@@ -242,9 +257,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </param>
         public void Push(char ch)
         {
-            CurrentChar = ch;
-
-            CurrentState.Push(ch);
+            CurrentState.Push(CurrentChar = ch);
 
             if (!TextEditorOptions.EolMarker.Contains(ch))
             {
@@ -259,7 +272,6 @@ namespace ICSharpCode.NRefactory.CSharp
                 {
                     var nextTabStop = (column - 1 + TextEditorOptions.IndentSize) / TextEditorOptions.IndentSize;
                     column = 1 + nextTabStop * TextEditorOptions.IndentSize;
-                    offset++;
                 }
                 else
                 {
@@ -270,6 +282,8 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 if (ch != NewLineChar)
                 {
+                    // there can be more than one chars that determine the EOL,
+                    // the engine uses only one of them defined with NewLineChar
                     return;
                 }
 
@@ -280,9 +294,16 @@ namespace ICSharpCode.NRefactory.CSharp
             }
 
             offset++;
-            PreviousChar = ch;
+            PreviousChar = CurrentChar;
         }
 
+        /// <summary>
+        ///     Parses the <see cref="Document"/> from <see cref="offset"/>
+        ///     to <paramref name="toOffset"/>.
+        /// </summary>
+        /// <param name="toOffset">
+        ///     End offset.
+        /// </param>
         public void UpdateToOffset(int toOffset)
         {
             if (toOffset < offset)

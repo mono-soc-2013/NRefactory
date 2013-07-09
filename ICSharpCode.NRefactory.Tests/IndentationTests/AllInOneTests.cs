@@ -24,5 +24,17 @@ namespace ICSharpCode.NRefactory.IndentationTests
         {
             BeginFileTest("PreProcessorDirectives.cs");
         }
+
+        [Test]
+        public void TestAllInOne_Comments()
+        {
+            BeginFileTest("Comments.cs");
+        }
+
+        [Test]
+        public void TestAllInOne_Strings()
+        {
+            BeginFileTest("Strings.cs");
+        }
     }
 }
