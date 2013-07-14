@@ -174,8 +174,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <typeparam name="T">
         ///     The type of the new state. Must be assignable from <see cref="IndentState"/>.
         /// </typeparam>
-        public void ChangeState<T>()
-            where T : IndentState
+        public void ChangeState<T>() where T : IndentState
         {
             Engine.CurrentState = IndentStateFactory.Create<T>(Engine.CurrentState);
         }
@@ -286,8 +285,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <returns>
         ///     A new state of type <typeparamref name="T"/>.
         /// </returns>
-        public static IndentState Create<T>(IndentEngine engine, IndentState parent = null)
-            where T : IndentState
+        public static IndentState Create<T>(IndentEngine engine, IndentState parent = null) where T : IndentState
         {
             return Create(typeof(T), engine, parent);
         }
@@ -305,8 +303,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <returns>
         ///     A new state of type <typeparamref name="T"/>.
         /// </returns>
-        public static IndentState Create<T>(IndentState prototype)
-            where T : IndentState
+        public static IndentState Create<T>(IndentState prototype) where T : IndentState
         {
             return Create(typeof(T), prototype.Engine, prototype);
         }
@@ -329,8 +326,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </remarks>
     internal class Null : IndentState
     {
-        public Null(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public Null(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -354,8 +350,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     Defines transitions for all types of open brackets.
         /// </summary>
-        internal static Dictionary<char, Action<IndentState>> OpenBrackets = 
-            new Dictionary<char, Action<IndentState>>
+        internal static Dictionary<char, Action<IndentState>> OpenBrackets = new Dictionary<char, Action<IndentState>>
         { 
             { '{', state => state.ChangeState<BracesBody>() }, 
             { '(', state => state.ChangeState<ParenthesesBody>() }, 
@@ -375,8 +370,7 @@ namespace ICSharpCode.NRefactory.CSharp
             get { throw new NotImplementedException(); }
         }
 
-        protected BracketsBodyBase(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        protected BracketsBodyBase(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -438,8 +432,7 @@ namespace ICSharpCode.NRefactory.CSharp
             get { return '\0'; }
         }
 
-        public GlobalBody(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public GlobalBody(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
     }
 
@@ -473,20 +466,13 @@ namespace ICSharpCode.NRefactory.CSharp
         public Body NextBody;
 
         /// <summary>
-        ///     Type of the current statement.
-        /// </summary>
-        public Statement CurrentStatement;
-
-        /// <summary>
         ///     True if the '=' char has been pushed.
         /// </summary>
         internal bool IsRightHandExpression;
 
-        public BracesBody(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public BracesBody(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         {
             CurrentBody = NextBody = extractBody(Parent);
-            CurrentStatement = Statement.None;
         }
 
         /// <summary>
@@ -507,7 +493,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void Push(char ch)
         {
-            if (ch == ';' || ch == ':')
+            if (ch == ';')
             {
                 while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
                 {
@@ -521,7 +507,7 @@ namespace ICSharpCode.NRefactory.CSharp
                 IsRightHandExpression = true;
                 NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent + 1;
             }
-            else if (ch == '.' && IsRightHandExpression)
+            else if (ch == '.')
             {
                 NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
             }
@@ -535,9 +521,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
         public override void InitializeState()
         {
-            // remove all continuations and extra spaces from the previous state
-            Parent.ThisLineIndent.ExtraSpaces = 0;
-            Parent.NextLineIndent.ExtraSpaces = 0;
+            // remove all continuations from the previous state
             if (Parent.NextLineIndent.Count > 0 && Parent.NextLineIndent.Peek() == IndentType.Continuation)
             {
                 Parent.NextLineIndent.Pop();
@@ -561,30 +545,13 @@ namespace ICSharpCode.NRefactory.CSharp
             Struct,
             Interface,
             Enum,
-            Switch,
-            Case
-        }
-
-        /// <summary>
-        ///     Types of statements.
-        /// </summary>
-        internal enum Statement
-        {
-            None,
-            If,
-            Else,
-            Do,
-            While,
-            For,
-            Foreach,
-            Lock,
-            Using
+            Switch
         }
 
         /// <summary>
         ///     Checks if the given string is a keyword and sets the
-        ///     <see cref="NextBody"/> and the <see cref="CurrentStatement"/>
-        ///     variables appropriately.
+        ///     <see cref="NextBody"/> and the <see cref="IndentState.NextLineIndent"/> 
+        ///     level appropriately.
         /// </summary>
         /// <param name="keyword">
         ///     A possible keyword.
@@ -600,35 +567,18 @@ namespace ICSharpCode.NRefactory.CSharp
                 { "enum", Body.Enum },
                 { "switch", Body.Switch },
             };
-
-            var statements = new Dictionary<string, Statement>
+            var specials = new HashSet<string>
             {
-                { "if", Statement.If },
-                { "else", Statement.Else },
-                { "do", Statement.Do },
-                { "while", Statement.While },
-                { "for", Statement.For },
-                { "foreach", Statement.Foreach },
-                { "lock", Statement.Lock },
-                { "using", Statement.Using },
+                "do", "if", "else", "for", "foreach", "while", "lock", "using"
             };
 
             if (blocks.ContainsKey(keyword))
             {
                 NextBody = blocks[keyword];
             }
-            else if (new string[] { "case", "default" }.Contains(keyword) && NextBody == Body.Switch)
+            else if (specials.Contains(keyword))
             {
-                ChangeState<SwitchCaseState>();
-            }
-            else if (statements.ContainsKey(keyword))
-            {
-                // only add continuation for 'else' in 'else if' statement.
-                if (!(statements[keyword] == Statement.If && CurrentStatement == Statement.Else))
-                {
-                    NextLineIndent.Push(IndentType.Continuation);
-                }
-                CurrentStatement = statements[keyword];
+                NextLineIndent.Push(IndentType.Continuation);
             }
         }
 
@@ -694,61 +644,6 @@ namespace ICSharpCode.NRefactory.CSharp
 
     #endregion
 
-    #region Switch-case body state
-
-    /// <summary>
-    ///     Switch-case statement state.
-    /// </summary>
-    /// <remarks>
-    ///     Represents the block of code in one switch case (including default).
-    /// </remarks>
-    internal class SwitchCaseState : BracesBody
-    {
-        public SwitchCaseState(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
-        { }
-
-        public override void Push(char ch)
-        {
-            if (ch == ClosedBracket)
-            {
-                ExitState();
-            }
-
-            base.Push(ch);
-        }
-
-        public override void InitializeState()
-        {
-            ThisLineIndent = Parent.ThisLineIndent.Clone();
-
-            // remove all continuations and extra spaces from this line indent
-            ThisLineIndent.ExtraSpaces = 0;
-            if (ThisLineIndent.Count > 0 && ThisLineIndent.Peek() == IndentType.Continuation)
-            {
-                ThisLineIndent.Pop();
-            }
-
-            NextLineIndent = ThisLineIndent.Clone();
-            NextLineIndent.Push(IndentType.Block);
-        }
-
-        protected override void CheckKeyword(string keyword)
-        {
-            if (new string[] { "case", "default" }.Contains(keyword))
-            {
-                ExitState();
-            }
-
-            base.CheckKeyword(keyword);
-        }
-
-        public override void OnExit()
-        { }
-    }
-
-    #endregion
-
     #region Parentheses body state
 
     /// <summary>
@@ -764,8 +659,7 @@ namespace ICSharpCode.NRefactory.CSharp
             get { return ')'; }
         }
 
-        public ParenthesesBody(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public ParenthesesBody(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void InitializeState()
@@ -794,8 +688,7 @@ namespace ICSharpCode.NRefactory.CSharp
             get { return ']'; }
         }
 
-        public SquareBracketsBody(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public SquareBracketsBody(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void InitializeState()
@@ -824,8 +717,7 @@ namespace ICSharpCode.NRefactory.CSharp
             get { return '>'; }
         }
 
-        public AngleBracketsBody(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public AngleBracketsBody(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void InitializeState()
@@ -863,8 +755,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </summary>
         internal StringBuilder DirectiveStatement = new StringBuilder();
 
-        public PreProcessor(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public PreProcessor(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -1231,8 +1122,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </remarks>
     internal class PreProcessorComment : IndentState
     {
-        public PreProcessorComment(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public PreProcessorComment(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -1264,8 +1154,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </summary>
     internal class CommentBase : IndentState
     {
-        protected CommentBase(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        protected CommentBase(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void InitializeState()
@@ -1290,8 +1179,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </summary>
         internal bool CheckForDocComment = true;
 
-        public LineComment(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public LineComment(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -1322,8 +1210,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// </summary>
     internal class DocComment : CommentBase
     {
-        public DocComment(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public DocComment(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -1356,8 +1243,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </remarks>
         internal bool IsAnyCharPushed;
 
-        public MultiLineComment(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public MultiLineComment(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -1396,8 +1282,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </summary>
         internal bool IsEscaped;
 
-        public StringLiteral(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public StringLiteral(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)
@@ -1437,8 +1322,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </summary>
         internal bool IsEscaped;
 
-        public VerbatimString(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public VerbatimString(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
         
         public override void Push(char ch)
@@ -1476,8 +1360,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// </summary>
         internal bool IsEscaped;
 
-        public Character(IndentEngine engine, IndentState parent = null)
-            : base(engine, parent)
+        public Character(IndentEngine engine, IndentState parent = null) : base(engine, parent)
         { }
 
         public override void Push(char ch)

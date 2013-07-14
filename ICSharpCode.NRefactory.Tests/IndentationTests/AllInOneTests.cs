@@ -36,5 +36,17 @@ namespace ICSharpCode.NRefactory.IndentationTests
         {
             BeginFileTest("Strings.cs");
         }
+
+        [Test]
+        public void TestAllInOne_IndentEngine()
+        {
+            BeginFileTest("IndentEngine.cs");
+        }
+
+        [Test]
+        public void TestAllInOne_IndentState()
+        {
+            BeginFileTest("IndentState.cs");
+        }
     }
 }
