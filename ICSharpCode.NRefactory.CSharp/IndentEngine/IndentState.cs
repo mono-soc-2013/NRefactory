@@ -42,7 +42,7 @@ namespace ICSharpCode.NRefactory.CSharp
     ///     Should be abstract, but because of IClonable it's implemented as a 
     ///     normal class with a protected constructor.
     /// </remarks>
-    internal class IndentState
+    public class IndentState
     {
         #region Properties
 
@@ -158,13 +158,11 @@ namespace ICSharpCode.NRefactory.CSharp
             {
                 Parent.Push(Engine.NewLineChar);
             }
-            // if a state exits on any char except the newline, the engine
-            // stays on the same line and this state has to adjust the current 
-            // indent of its parent so that it's equal to this line indent.
-            else
-            {
-                Parent.ThisLineIndent = ThisLineIndent.Clone();
-            }
+            
+            // when a state exits the engine stays on the same line and this
+            // state has to adjust the current indent of its parent so that 
+            // it's equal to this line indent.
+            Parent.ThisLineIndent = ThisLineIndent.Clone();
         }
 
         /// <summary>
@@ -249,7 +247,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     Indentation state factory.
     /// </summary>
-    internal static class IndentStateFactory
+    public static class IndentStateFactory
     {
         /// <summary>
         ///     Creates a new state.
@@ -327,7 +325,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Doesn't define any transitions to new states.
     /// </remarks>
-    internal class Null : IndentState
+    public class Null : IndentState
     {
         public Null(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
@@ -349,7 +347,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents a block of code between a pair of brackets.
     /// </remarks>
-    internal class BracketsBodyBase : IndentState
+    public class BracketsBodyBase : IndentState
     {
         /// <summary>
         ///     Defines transitions for all types of open brackets.
@@ -431,7 +429,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents the global space of the program.
     /// </remarks>
-    internal class GlobalBody : BracketsBodyBase
+    public class GlobalBody : BracketsBodyBase
     {
         internal override char ClosedBracket
         {
@@ -453,7 +451,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents a block of code between { and }.
     /// </remarks>
-    internal class BracesBody : BracketsBodyBase
+    public class BracesBody : BracketsBodyBase
     {
         internal override char ClosedBracket
         {
@@ -553,7 +551,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     Types of braces bodies.
         /// </summary>
-        internal enum Body
+        public enum Body
         {
             None,
             Namespace,
@@ -568,7 +566,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     Types of statements.
         /// </summary>
-        internal enum Statement
+        public enum Statement
         {
             None,
             If,
@@ -702,7 +700,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents the block of code in one switch case (including default).
     /// </remarks>
-    internal class SwitchCaseState : BracesBody
+    public class SwitchCaseState : BracesBody
     {
         public SwitchCaseState(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
@@ -757,7 +755,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents a block of code between ( and ).
     /// </remarks>
-    internal class ParenthesesBody : BracketsBodyBase
+    public class ParenthesesBody : BracketsBodyBase
     {
         internal override char ClosedBracket
         {
@@ -787,7 +785,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents a block of code between [ and ].
     /// </remarks>
-    internal class SquareBracketsBody : BracketsBodyBase
+    public class SquareBracketsBody : BracketsBodyBase
     {
         internal override char ClosedBracket
         {
@@ -817,7 +815,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <remarks>
     ///     Represents a block of code between < and >.
     /// </remarks>
-    internal class AngleBracketsBody : BracketsBodyBase
+    public class AngleBracketsBody : BracketsBodyBase
     {
         internal override char ClosedBracket
         {
@@ -850,7 +848,7 @@ namespace ICSharpCode.NRefactory.CSharp
     ///     Activated when the '#' char is pushed and the 
     ///     <see cref="IndentEngine.IsLineStart"/> is true.
     /// </remarks>
-    internal class PreProcessor : IndentState
+    public class PreProcessor : IndentState
     {
         /// <summary>
         ///     The type of the preprocessor directive.
@@ -990,7 +988,7 @@ namespace ICSharpCode.NRefactory.CSharp
         /// <summary>
         ///     Types of preprocessor directives.
         /// </summary>
-        internal enum PreProcessorDirective
+        public enum PreProcessorDirective
         {
             None,
             If,
@@ -1229,7 +1227,7 @@ namespace ICSharpCode.NRefactory.CSharp
     ///     Activates when the #if or #elif directive is false and ignores
     ///     all pushed chars until the next '#'.
     /// </remarks>
-    internal class PreProcessorComment : IndentState
+    public class PreProcessorComment : IndentState
     {
         public PreProcessorComment(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
@@ -1262,7 +1260,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     Base for all comment states.
     /// </summary>
-    internal class CommentBase : IndentState
+    public class CommentBase : IndentState
     {
         protected CommentBase(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
@@ -1282,7 +1280,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     Single-line comment state.
     /// </summary>
-    internal class LineComment : CommentBase
+    public class LineComment : CommentBase
     {
         /// <summary>
         ///     It's possible that this should be the DocComment state ->
@@ -1320,7 +1318,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     XML documentation comment state.
     /// </summary>
-    internal class DocComment : CommentBase
+    public class DocComment : CommentBase
     {
         public DocComment(IndentEngine engine, IndentState parent = null)
             : base(engine, parent)
@@ -1344,7 +1342,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     Multi-line comment state.
     /// </summary>
-    internal class MultiLineComment : CommentBase
+    public class MultiLineComment : CommentBase
     {
         /// <summary>
         ///     True if any char has been pushed to this state.
@@ -1389,7 +1387,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     StringLiteral state.
     /// </summary>
-    internal class StringLiteral : IndentState
+    public class StringLiteral : IndentState
     {
         /// <summary>
         ///     True if the next char is escaped with '\'.
@@ -1430,7 +1428,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     Verbatim string state.
     /// </summary>
-    internal class VerbatimString : IndentState
+    public class VerbatimString : IndentState
     {
         /// <summary>
         ///     True if there is an odd number of '"' in a row.
@@ -1469,7 +1467,7 @@ namespace ICSharpCode.NRefactory.CSharp
     /// <summary>
     ///     Character state.
     /// </summary>
-    internal class Character : IndentState
+    public class Character : IndentState
     {
         /// <summary>
         ///     True if the next char is escaped with '\'.

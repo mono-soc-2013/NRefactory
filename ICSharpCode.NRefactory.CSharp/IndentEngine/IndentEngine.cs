@@ -65,14 +65,14 @@ namespace ICSharpCode.NRefactory.CSharp
         {
             get
             {
-                return TextEditorOptions.EolMarker[0];
+                return TextEditorOptions.EolMarker.Last();
             }
         }
 
         /// <summary>
         ///     The current indentation state.
         /// </summary>
-        internal IndentState CurrentState;
+        public IndentState CurrentState;
 
         /// <summary>
         ///     The current location of the engine in <see cref="Document"/>.

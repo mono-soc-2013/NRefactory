@@ -49,9 +49,12 @@ namespace ICSharpCode.NRefactory.Demo
 			this.miniToolStrip = new System.Windows.Forms.ToolStrip();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
 			this.csDemo1 = new ICSharpCode.NRefactory.Demo.CSDemo();
+			this.indentDemo = new ICSharpCode.NRefactory.Demo.IndentDemo();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
+			this.tabPageIndent = new System.Windows.Forms.TabPage();
 			this.tabPage1.SuspendLayout();
+			this.tabPageIndent.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPage2.SuspendLayout();
 			this.SuspendLayout();
@@ -87,10 +90,30 @@ namespace ICSharpCode.NRefactory.Demo
 			this.csDemo1.Size = new System.Drawing.Size(501, 452);
 			this.csDemo1.TabIndex = 0;
 			// 
+			// tabPageIndent
+			// 
+			this.tabPageIndent.Controls.Add(this.indentDemo);
+			this.tabPageIndent.Location = new System.Drawing.Point(4, 22);
+			this.tabPageIndent.Name = "tabPageIndent";
+			this.tabPageIndent.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPageIndent.Size = new System.Drawing.Size(507, 458);
+			this.tabPageIndent.TabIndex = 3;
+			this.tabPageIndent.Text = "C# Indent";
+			this.tabPageIndent.UseVisualStyleBackColor = true;
+			// 
+			// indentDemo
+			// 
+			this.indentDemo.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.indentDemo.Location = new System.Drawing.Point(3, 3);
+			this.indentDemo.Name = "indentDemo";
+			this.indentDemo.Size = new System.Drawing.Size(501, 452);
+			this.indentDemo.TabIndex = 3;
+			// 
 			// tabControl1
 			// 
 			this.tabControl1.Controls.Add(this.tabPage1);
 			this.tabControl1.Controls.Add(this.tabPage2);
+			this.tabControl1.Controls.Add(this.tabPageIndent);
 			this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
@@ -123,8 +146,10 @@ namespace ICSharpCode.NRefactory.Demo
 		}
 		private System.Windows.Forms.TabPage tabPage2;
 		private ICSharpCode.NRefactory.Demo.CSDemo csDemo1;
+		private ICSharpCode.NRefactory.Demo.IndentDemo indentDemo;
 		private System.Windows.Forms.ToolStrip miniToolStrip;
 		private System.Windows.Forms.TabPage tabPage1;
 		private System.Windows.Forms.TabControl tabControl1;
+		private System.Windows.Forms.TabPage tabPageIndent;
 	}
 }

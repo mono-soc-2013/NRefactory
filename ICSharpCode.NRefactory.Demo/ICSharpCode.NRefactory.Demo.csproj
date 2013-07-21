@@ -89,6 +89,12 @@
     <Compile Include="CSDemo.Designer.cs">
       <DependentUpon>CSDemo.cs</DependentUpon>
     </Compile>
+    <Compile Include="IndentDemo.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="IndentDemo.Designer.cs">
+      <DependentUpon>IndentDemo.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -117,6 +123,9 @@
   <ItemGroup>
     <EmbeddedResource Include="CSDemo.resx">
       <DependentUpon>CSDemo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IndentDemo.resx">
+      <DependentUpon>IndentDemo.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
