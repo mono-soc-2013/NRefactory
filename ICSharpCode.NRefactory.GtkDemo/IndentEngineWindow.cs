@@ -45,7 +45,7 @@ namespace ICSharpCode.NRefactory.GtkDemo
 
 			var document = new ReadOnlyDocument(this);
 			policy = FormattingOptionsFactory.CreateMono();
-			options = new TextEditorOptions { EolMarker = "\n" };
+			options = new TextEditorOptions();
 			indentEngine = new IndentEngine(document, options, policy);
 
 			indentEngine.OnThisLineIndentFinalized += (sender, args) =>

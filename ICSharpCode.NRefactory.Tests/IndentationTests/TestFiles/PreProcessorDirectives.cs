@@ -8,54 +8,54 @@
 
 namespace PreProcessorDirectives
 {
-    class PreProcessorDirectives
-    {
-        void IfDebug()
-        {
-            #region If/Elif Directives
+	class PreProcessorDirectives
+	{
+		void IfDebug()
+		{
+			#region If/Elif Directives
 
 #if DEBUG
-            {
-                // This block should be correctly indented
-            }
+			{
+				// This block should be correctly indented
+			}
 #elif true
-            {
-            // This comment is not indented since the #if was true
-            }
+			{
+			// This comment is not indented since the #if was true
+			}
 #endif
 
 #if TRACE
-            {
-            // Not indented
-            }
+			{
+			// Not indented
+			}
 #elif debug
-            {
-            // Also not indented
-            }
+			{
+			// Also not indented
+			}
 #else
-            {
-                // This should be indented
-            }
+			{
+				// This should be indented
+			}
 #endif
 
-            #endregion
-        }
+			#endregion
+		}
 
-        #region One-line directives
+		#region One-line directives
 
-        void OneLiners
-        {
-            //
+		void OneLiners
+		{
+			//
 #pragma warning disable 649
-            //
+			//
 #warning 649
-            //
+			//
 #line 649
-            //
+			//
 #error 649
-            //
-        }
+			//
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

@@ -9,42 +9,42 @@
 
 namespace Comments
 {
-    /// <summary>
-    ///     This is a test file for all types of comments.
-    /// </summary>
-    class Comments
-    {
-        /// <summary>
-        ///     Comment method.
-        /// </summary>
-        /// <param name="id">
-        ///     Id.
-        /// </param>
-        void Comment(int id,      // id
-                     string text) // text
-        {
-            int i; // i
+	/// <summary>
+	///     This is a test file for all types of comments.
+	/// </summary>
+	class Comments
+	{
+		/// <summary>
+		///     Comment method.
+		/// </summary>
+		/// <param name="id">
+		///     Id.
+		/// </param>
+		void Comment(int id,      // id
+		             string text) // text
+		{
+			int i; // i
 
-            for (i = 0; i < 42 /* 42; */; i++) /* *
-                                                  * Multi-line 
-                                                  */
-            {
-                // break
-                break;
-            } // for
+			for (i = 0; i < 42 /* 42; */; i++) /* *
+			                                      * Multi-line 
+			                                      */
+			{
+				// break
+				break;
+			} // for
 
-            /////////*
+			/////////*
 
-            while (true)
-                // comments don't affect continuation
-                ;
+			while (true)
+				// comments don't affect continuation
+				;
 
-            /********/ if (false) lock (this)
-                    // /*
-                    ;
+			/********/ if (false) lock (this)
+					// /*
+					;
 
-            { /*/*/ }
-        }
-        /*/ still in comment } */
-    }
+			{ /*/*/ }
+		}
+		/*/ still in comment } */
+	}
 }

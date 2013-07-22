@@ -2,11 +2,11 @@
 
 namespace SimpleNamespace
 {
-    class SimpleClass
-    {
-        void SimpleMethod()
-        {
-            // simple comment
-        }
-    }
+	class SimpleClass
+	{
+		void SimpleMethod()
+		{
+			// simple comment
+		}
+	}
 }
