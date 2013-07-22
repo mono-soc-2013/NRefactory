@@ -211,6 +211,11 @@ namespace ICSharpCode.NRefactory.CSharp
 
 			if (ch == Engine.NewLineChar)
 			{
+				if (!Engine.TextEditorOptions.IndentBlankLines)
+				{
+					ThisLineIndent = new Indent(Engine.TextEditorOptions);
+				}
+
 				if (Engine.CurrentState == this)
 				{
 					// if we got this far, the current line indent becomes permanent,
