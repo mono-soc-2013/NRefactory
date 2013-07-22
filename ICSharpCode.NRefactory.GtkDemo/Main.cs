@@ -35,6 +35,8 @@ namespace ICSharpCode.NRefactory.GtkDemo
 			Application.Init ();
 			MainWindow win = new MainWindow ();
 			win.Show ();
+			IndentEngineWindow indentWin = new IndentEngineWindow ();
+			indentWin.Show ();
 			Application.Run ();
 		}
 	}
