@@ -8,9 +8,9 @@ namespace ICSharpCode.NRefactory.IndentationTests
 {
 	internal static class Helper
 	{
-		public static IndentEngine CreateEngine(string text)
+		public static IndentEngine CreateEngine(string text, CSharpFormattingOptions formatOptions = null)
 		{
-			var policy = FormattingOptionsFactory.CreateMono();
+			var policy = formatOptions ?? FormattingOptionsFactory.CreateMono();
 
 			var sb = new StringBuilder();
 			int offset = 0;

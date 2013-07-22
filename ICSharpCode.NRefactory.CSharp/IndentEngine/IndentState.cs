@@ -950,7 +950,15 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void InitializeState()
 		{
-			ThisLineIndent = new Indent(Engine.TextEditorOptions);
+			if (Engine.Options.IndentPreprocessorStatements)
+			{
+				ThisLineIndent = Parent.ThisLineIndent.Clone();
+			}
+			else
+			{
+				ThisLineIndent = new Indent(Engine.TextEditorOptions);
+			}
+
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 

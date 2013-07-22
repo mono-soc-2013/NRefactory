@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using ICSharpCode.NRefactory.CSharp;
+using NUnit.Framework;
 
 namespace ICSharpCode.NRefactory.IndentationTests
 {
@@ -242,6 +243,21 @@ namespace Foo {
 		{
 #endif
 		$");
+			Assert.AreEqual("\t\t", indent.ThisLineIndent);
+			Assert.AreEqual("\t\t", indent.NewLineIndent);
+		}
+
+		[Test]
+		public void TestPreProcessor_IndentPreprocessor()
+		{
+			var policy = FormattingOptionsFactory.CreateMono();
+			policy.IndentPreprocessorStatements = true;
+
+			var indent = Helper.CreateEngine(@"
+namespace Foo {
+	class Foo {
+		#if true $ ", policy);
+
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
 			Assert.AreEqual("\t\t", indent.NewLineIndent);
 		}
