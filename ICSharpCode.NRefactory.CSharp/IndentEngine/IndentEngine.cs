@@ -300,7 +300,11 @@ namespace ICSharpCode.NRefactory.CSharp
 			}
 
 			offset++;
-			PreviousChar = CurrentChar;
+			// ignore whitespace and newline chars
+			if (!char.IsWhiteSpace(CurrentChar) && !TextEditorOptions.EolMarker.Contains(CurrentChar))
+			{
+				PreviousChar = CurrentChar;
+			}
 		}
 
 		/// <summary>
