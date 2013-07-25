@@ -39,7 +39,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	///     Delegates the responsibility for pushing a new char to the current 
 	///     state and changes between states depending on the pushed chars.
 	/// </remarks>
-	public class IndentEngine
+	public class IndentEngine : ICloneable
 	{
 		#region Properties
 
@@ -65,14 +65,14 @@ namespace ICSharpCode.NRefactory.CSharp
 		{
 			get
 			{
-				return TextEditorOptions.EolMarker[0];
+				return TextEditorOptions.EolMarker.Last();
 			}
 		}
 
 		/// <summary>
 		///     The current indentation state.
 		/// </summary>
-		internal IndentState CurrentState;
+		public IndentState CurrentState;
 
 		/// <summary>
 		///     The current location of the engine in <see cref="Document"/>.
@@ -156,13 +156,13 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <summary>
 		///     Stores conditional symbols of the #define directives.
 		/// </summary>
-		internal HashSet<string> ConditionalSymbols = new HashSet<string>();
+		public HashSet<string> ConditionalSymbols = new HashSet<string>();
 
 		/// <summary>
 		///     True if any of the preprocessor if/elif directives in the current
 		///     block (between #if and #endif) were evaluated to true.
 		/// </summary>
-		internal bool IfDirectiveEvalResult;
+		public bool IfDirectiveEvalResult;
 
 		#endregion
 
@@ -188,11 +188,12 @@ namespace ICSharpCode.NRefactory.CSharp
 			this.CurrentState = IndentStateFactory.Default(this);
 		}
 
-		IndentEngine(IndentEngine prototype)
+		public IndentEngine(IndentEngine prototype)
 		{
 			this.Document = prototype.Document;
 			this.Options = prototype.Options;
 			this.TextEditorOptions = prototype.TextEditorOptions;
+
 			this.CurrentState = prototype.CurrentState.Clone();
 			this.ConditionalSymbols = new HashSet<string>(prototype.ConditionalSymbols);
 			this.IfDirectiveEvalResult = prototype.IfDirectiveEvalResult;
@@ -209,6 +210,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		#endregion
 
 		#region IClonable
+
+		object ICloneable.Clone()
+		{
+			return Clone();
+		}
 
 		public IndentEngine Clone()
 		{
@@ -227,7 +233,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			CurrentState = IndentStateFactory.Default(this);
 			ConditionalSymbols.Clear();
 			IfDirectiveEvalResult = false;
-			CurrentIndent.Clear();
+			CurrentIndent.Length = 0;
 
 			offset = 0;
 			line = 1;
@@ -287,14 +293,18 @@ namespace ICSharpCode.NRefactory.CSharp
 					return;
 				}
 
-				CurrentIndent.Clear();
+				CurrentIndent.Length = 0;
 				IsLineStart = true;
 				column = 1;
 				line++;
 			}
 
 			offset++;
-			PreviousChar = CurrentChar;
+			// ignore whitespace and newline chars
+			if (!char.IsWhiteSpace(CurrentChar) && !TextEditorOptions.EolMarker.Contains(CurrentChar))
+			{
+				PreviousChar = CurrentChar;
+			}
 		}
 
 		/// <summary>
