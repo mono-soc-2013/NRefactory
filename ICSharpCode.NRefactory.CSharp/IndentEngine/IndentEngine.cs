@@ -156,13 +156,13 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <summary>
 		///     Stores conditional symbols of the #define directives.
 		/// </summary>
-		internal HashSet<string> ConditionalSymbols = new HashSet<string>();
+		public HashSet<string> ConditionalSymbols = new HashSet<string>();
 
 		/// <summary>
 		///     True if any of the preprocessor if/elif directives in the current
 		///     block (between #if and #endif) were evaluated to true.
 		/// </summary>
-		internal bool IfDirectiveEvalResult;
+		public bool IfDirectiveEvalResult;
 
 		#endregion
 
@@ -188,7 +188,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			this.CurrentState = IndentStateFactory.Default(this);
 		}
 
-		IndentEngine(IndentEngine prototype)
+		public IndentEngine(IndentEngine prototype)
 		{
 			this.Document = prototype.Document;
 			this.Options = prototype.Options;
