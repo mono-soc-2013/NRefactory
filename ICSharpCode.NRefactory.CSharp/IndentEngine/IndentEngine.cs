@@ -31,6 +31,12 @@ using System.Text;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
+	public enum IndentationMode
+	{
+		OnTheFly,
+		Intrusive
+	}
+
 	/// <summary>
 	///     The indentation engine.
 	/// </summary>
@@ -67,6 +73,15 @@ namespace ICSharpCode.NRefactory.CSharp
 			{
 				return TextEditorOptions.EolMarker.Last();
 			}
+		}
+
+		/// <summary>
+		///	    Determines when the reindentation happens.
+		/// </summary>
+		public IndentationMode IndentationMode
+		{
+			get;
+			set;
 		}
 
 		/// <summary>
@@ -133,7 +148,16 @@ namespace ICSharpCode.NRefactory.CSharp
 		{
 			get
 			{
-				return !IsLineStart && (ThisLineIndent != CurrentIndent.ToString());
+				var needsReindent = !IsLineStart && (ThisLineIndent != CurrentIndent.ToString());
+
+				if (IndentationMode == IndentationMode.Intrusive)
+				{
+					return needsReindent;
+				}
+				else
+				{
+					return CurrentChar == NewLineChar && needsReindent;
+				}
 			}
 		}
 
