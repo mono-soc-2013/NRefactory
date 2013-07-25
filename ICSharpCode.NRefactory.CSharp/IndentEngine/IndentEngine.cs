@@ -39,7 +39,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	///     Delegates the responsibility for pushing a new char to the current 
 	///     state and changes between states depending on the pushed chars.
 	/// </remarks>
-	public class IndentEngine
+	public class IndentEngine : ICloneable
 	{
 		#region Properties
 
@@ -193,6 +193,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			this.Document = prototype.Document;
 			this.Options = prototype.Options;
 			this.TextEditorOptions = prototype.TextEditorOptions;
+
 			this.CurrentState = prototype.CurrentState.Clone();
 			this.ConditionalSymbols = new HashSet<string>(prototype.ConditionalSymbols);
 			this.IfDirectiveEvalResult = prototype.IfDirectiveEvalResult;
@@ -209,6 +210,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		#endregion
 
 		#region IClonable
+
+		object ICloneable.Clone()
+		{
+			return Clone();
+		}
 
 		public IndentEngine Clone()
 		{
@@ -227,7 +233,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			CurrentState = IndentStateFactory.Default(this);
 			ConditionalSymbols.Clear();
 			IfDirectiveEvalResult = false;
-			CurrentIndent.Clear();
+			CurrentIndent.Length = 0;
 
 			offset = 0;
 			line = 1;
@@ -287,7 +293,7 @@ namespace ICSharpCode.NRefactory.CSharp
 					return;
 				}
 
-				CurrentIndent.Clear();
+				CurrentIndent.Length = 0;
 				IsLineStart = true;
 				column = 1;
 				line++;
