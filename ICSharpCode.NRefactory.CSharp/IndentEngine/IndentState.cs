@@ -630,7 +630,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			For,
 			Foreach,
 			Lock,
-			Using
+			Using,
+			Return
 		}
 
 		/// <summary>
@@ -663,6 +664,7 @@ namespace ICSharpCode.NRefactory.CSharp
 				{ "foreach", Statement.Foreach },
 				{ "lock", Statement.Lock },
 				{ "using", Statement.Using },
+				{ "return", Statement.Return },
 			};
 
 			if (blocks.ContainsKey(keyword))

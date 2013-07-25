@@ -352,5 +352,79 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		#endregion
+
+		#region Monodevelop interface
+
+		public bool IsInsidePreprocessorDirective
+		{
+			get { return CurrentState is PreProcessorState; }
+		}
+
+		public bool IsInsidePreprocessorComment
+		{
+			get { return CurrentState is PreProcessorCommentState; }
+		}
+
+		public bool IsInsideStringLiteral
+		{
+			get { return CurrentState is StringLiteralState; }
+		}
+
+		public bool IsInsideVerbatimString
+		{
+			get { return CurrentState is VerbatimStringState; }
+		}
+
+		public bool IsInsideCharacter
+		{
+			get { return CurrentState is CharacterState; }
+		}
+
+		public bool IsInsideString
+		{
+			get { return IsInsideStringLiteral || IsInsideVerbatimString || IsInsideCharacter; }
+		}
+
+		public bool IsInsideLineComment
+		{
+			get { return CurrentState is LineCommentState; }
+		}
+
+		public bool IsInsideMultiLineComment
+		{
+			get { return CurrentState is MultiLineCommentState; }
+		}
+
+		public bool IsInsideDocLineComment
+		{
+			get { return CurrentState is DocCommentState; }
+		}
+
+		public bool IsInsideComment
+		{
+			get { return IsInsideLineComment || IsInsideMultiLineComment || IsInsideDocLineComment; }
+		}
+
+		public bool IsInsideOrdinaryComment
+		{
+			get { return IsInsideLineComment || IsInsideMultiLineComment; }
+		}
+
+		public bool IsInsideOrdinaryCommentOrString
+		{
+			get { return IsInsideOrdinaryComment || IsInsideString; }
+		}
+
+		//public bool LineBeganInsideVerbatimString
+		//{
+		//	get { throw new NotImplementedException(); }
+		//}
+
+		//public bool LineBeganInsideMultiLineComment
+		//{
+		//	get { throw new NotImplementedException(); }
+		//}
+
+		#endregion
 	}
 }
