@@ -539,6 +539,11 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void Push(char ch)
 		{
+			if (ch == ':' && Engine.IsLineStart)
+			{
+				ThisLineIndent.Push(IndentType.Continuation);
+			}
+
 			if (ch == ';' || ch == ':')
 			{
 				while (NextLineIndent.Count > 0 && NextLineIndent.Peek() == IndentType.Continuation)
@@ -556,6 +561,16 @@ namespace ICSharpCode.NRefactory.CSharp
 			else if (ch == '.' && IsRightHandExpression)
 			{
 				NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
+			}
+			else if (ch == Engine.NewLineChar && NextLineIndent.ExtraSpaces > 0 &&
+				    (Engine.PreviousChar == '=' || Engine.PreviousChar == '.'))
+			{
+				// the last significant pushed char was '=' or '.' and we added
+				// extra spaces to align the next line, but the newline char was
+				// pushed afterwards so it's better to replace the extra spaces
+				// with one continuation indent.
+				NextLineIndent.ExtraSpaces = 0;
+				NextLineIndent.Push(IndentType.Continuation);
 			}
 			else if (ch == ClosedBracket && Engine.IsLineStart)
 			{
@@ -657,6 +672,10 @@ namespace ICSharpCode.NRefactory.CSharp
 			else if (new string[] { "case", "default" }.Contains(keyword) && NextBody == Body.Switch)
 			{
 				ChangeState<SwitchCaseState>();
+			}
+			else if (keyword == "where" && !IsRightHandExpression)
+			{
+				ThisLineIndent.Push(IndentType.Continuation);
 			}
 			else if (statements.ContainsKey(keyword))
 			{
