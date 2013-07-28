@@ -13,7 +13,7 @@ namespace PreProcessorDirectives
 		void IfDebug()
 		{
 			#region If/Elif Directives
-
+			
 #if DEBUG
 			{
 				// This block should be correctly indented
@@ -23,7 +23,7 @@ namespace PreProcessorDirectives
 			// This comment is not indented since the #if was true
 			}
 #endif
-
+			
 #if TRACE
 			{
 			// Not indented
@@ -37,12 +37,12 @@ namespace PreProcessorDirectives
 				// This should be indented
 			}
 #endif
-
-			#endregion
+			
+			#endregion 
 		}
-
+		
 		#region One-line directives
-
+		
 		void OneLiners
 		{
 			//
@@ -55,7 +55,7 @@ namespace PreProcessorDirectives
 #error 649
 			//
 		}
-
-		#endregion
+		
+		#endregion 
 	}
 }

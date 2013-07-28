@@ -11,7 +11,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 		{
 			var indent = Helper.CreateEngine("#if MONO");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -21,7 +21,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 #if false
 { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -31,7 +31,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 #if true
 { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -43,7 +43,7 @@ namespace Foo {
 #if false
 		{ $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -55,7 +55,7 @@ namespace Foo {
 #if true
 		{ $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -71,7 +71,7 @@ namespace Foo {
 #endif
 			$");
 			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ namespace Foo {
 #endif
 	$");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -103,7 +103,7 @@ namespace Foo {
 #endif
 	$");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -119,7 +119,7 @@ namespace Foo {
 #endif
 			$");
 			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		#region Single-line directives
@@ -132,7 +132,7 @@ namespace Foo {
 	class Foo {
 		#region Foo $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -145,7 +145,7 @@ namespace Foo {
 		void Test() { }
 		#endregion $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -156,7 +156,7 @@ namespace Foo {
 	class Foo {
 #pragma Foo 42 $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -167,7 +167,7 @@ namespace Foo {
 	class Foo {
 #warning Foo $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -178,7 +178,7 @@ namespace Foo {
 	class Foo {
 #error Foo $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -189,7 +189,7 @@ namespace Foo {
 	class Foo {
 #line 42 $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -200,7 +200,7 @@ namespace Foo {
 	class Foo {
 #define Foo 42 $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -211,7 +211,7 @@ namespace Foo {
 	class Foo {
 #undef Foo $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		#endregion
@@ -228,7 +228,7 @@ namespace Foo {
 #endif
 		$");
 			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -244,7 +244,7 @@ namespace Foo {
 #endif
 		$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -259,7 +259,7 @@ namespace Foo {
 		#if true $ ", policy);
 
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 	}
 }

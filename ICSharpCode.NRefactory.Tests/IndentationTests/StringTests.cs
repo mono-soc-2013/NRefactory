@@ -10,7 +10,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 		{
 			var indent = Helper.CreateEngine(@"""some string""$");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -18,7 +18,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 		{
 			var indent = Helper.CreateEngine(@"""some escaped \"" string "" { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -26,7 +26,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 		{
 			var indent = Helper.CreateEngine(@"""some not escaped "" string "" { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -37,7 +37,7 @@ namespace Foo {
 	""some string {
 #if true $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -45,7 +45,7 @@ namespace Foo {
 		{
 			var indent = Helper.CreateEngine(@"'X'$");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -53,7 +53,7 @@ namespace Foo {
 		{
 			var indent = Helper.CreateEngine(@"'\'' { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -61,7 +61,7 @@ namespace Foo {
 		{
 			var indent = Helper.CreateEngine(@"''' { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -72,7 +72,7 @@ namespace Foo {
 	' { 
 #if true $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -80,7 +80,7 @@ namespace Foo {
 		{
 			var indent = Helper.CreateEngine(@"@"" verbatim string "" $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -92,7 +92,7 @@ namespace Foo {
 	{
 		@"" verbatim string $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -105,7 +105,7 @@ namespace Foo {
 		@"" verbatim string 
 { $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -113,7 +113,7 @@ namespace Foo {
 		{
 			var indent = Helper.CreateEngine(@"@"" some """"string { """" in a verbatim string "" $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -121,7 +121,7 @@ namespace Foo {
 		{
 			var indent = Helper.CreateEngine(@"@"" some ""string { "" in a verbatim string "" $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -131,7 +131,7 @@ namespace Foo {
 namespace Foo {
 	@"" some verbatim string """" { $");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -141,7 +141,7 @@ namespace Foo {
 namespace Foo {
 	@"" some verbatim string """""" { $");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 	}
 }

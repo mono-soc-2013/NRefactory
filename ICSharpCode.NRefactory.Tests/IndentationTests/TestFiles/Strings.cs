@@ -17,7 +17,7 @@ can't escape a verbatim string \";
 			string concat = "line 1" +
 			                "line 2" +
 			                "line 3";
-
+			
 			var c = '\\';
 			c = '\'';
 			c = ' // syntax error, but on the next line we start with the previous state

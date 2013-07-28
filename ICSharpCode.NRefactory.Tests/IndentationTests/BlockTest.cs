@@ -13,7 +13,7 @@ namespace Foo {
 	class Foo {
 		$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -27,7 +27,7 @@ namespace Foo {
 #endif
 		$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -41,7 +41,7 @@ namespace Foo {
 #endif
 		$");
 			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -53,7 +53,7 @@ class Foo {
 	{
 		if (true)$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -65,7 +65,7 @@ class Foo {
 	{
 		while (true)$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -77,7 +77,7 @@ class Foo {
 	{
 		for (;;)$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -89,7 +89,7 @@ class Foo {
 	{
 		foreach (var v in V)$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -102,7 +102,7 @@ class Foo {
 		do
 			$");
 			Assert.AreEqual("\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -116,7 +116,7 @@ class Foo {
 			;
 $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -129,7 +129,7 @@ class Foo {
 		do do
 				$");
 			Assert.AreEqual("\t\t\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -143,7 +143,7 @@ class Foo {
 				;
 $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -157,7 +157,7 @@ class Foo {
 					foo();
 $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -173,7 +173,7 @@ class Foo {
 					foo();
 $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -185,7 +185,7 @@ class Foo {
 	{
 		do do do foo(); $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -197,7 +197,7 @@ class Foo {
 	{
 		do do do foo() $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -209,7 +209,7 @@ class Foo {
 	{
 	}$");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -220,7 +220,7 @@ class Foo {
 	void Test ()
 	{ }$");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -232,7 +232,7 @@ class Foo {
 	{
 		Foo(true,$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+			Assert.AreEqual("\t\t    ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -244,7 +244,7 @@ class Foo {
 	{
 		Foo($");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+			Assert.AreEqual("\t\t    ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -257,7 +257,7 @@ class Foo {
 		Foooo(a, b, c, // ) 
 				$");
 			Assert.AreEqual("\t\t      ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t      ", indent.NewLineIndent);
+			Assert.AreEqual("\t\t      ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -270,7 +270,7 @@ class Foo {
 		Foooo(a, b, c, // ) 
 				d) $");
 			Assert.AreEqual("\t\t      ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -283,7 +283,7 @@ class Foo {
 		var v = [a, b, c, // ] 
 					$");
 			Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t         ", indent.NewLineIndent);
+			Assert.AreEqual("\t\t         ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -296,7 +296,7 @@ class Foo {
 		var v = [a, b, c, // ]
 					d]; $");
 			Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -310,7 +310,7 @@ class Foo {
 				$");
 			Assert.Inconclusive("Not implemented.");
 			Assert.AreEqual("\t\t     ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t     ", indent.NewLineIndent);
+			Assert.AreEqual("\t\t     ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -324,7 +324,7 @@ class Foo {
 				d> $");
 			Assert.Inconclusive("Not implemented.");
 			Assert.AreEqual("\t\t     ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -339,7 +339,7 @@ class Foo {
 						e), $    // e
 			f);");
 			Assert.AreEqual("\t\t              ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t    ", indent.NewLineIndent);
+			Assert.AreEqual("\t\t    ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -353,7 +353,7 @@ class Foo {
 				where i == ';'
 				select i; $");
 			Assert.AreEqual("\t\t        ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -366,7 +366,7 @@ class Foo {
 		var v = I.Where(i => i == ';')
 					.Select(i => i); $");
 			Assert.AreEqual("\t\t         ", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -379,7 +379,7 @@ class Foo {
 		var v = () => { $
 		};");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -392,7 +392,7 @@ class Foo {
 		var v = () => {
 		}; $");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 	}
 }

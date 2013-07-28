@@ -10,7 +10,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 		{
 			var indent = Helper.CreateEngine("// comment $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -20,7 +20,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 #if NOTTHERE
 	// comment $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -30,7 +30,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 class Foo {
 	// comment $");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -42,7 +42,7 @@ class Foo {
 		// comment 
 		$");
 			Assert.AreEqual("\t\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t\t", indent.NewLineIndent);
+			Assert.AreEqual("\t\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -55,7 +55,7 @@ class Foo {
 		Test();
 	$");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -66,7 +66,7 @@ class Foo {
 	for (;;) ;
 	// comment $");
 			Assert.AreEqual("\t", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -74,7 +74,7 @@ class Foo {
 		{
 			var indent = Helper.CreateEngine(@"/* comment */$");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("", indent.NewLineIndent);
+			Assert.AreEqual("", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -82,7 +82,7 @@ class Foo {
 		{
 			var indent = Helper.CreateEngine(@"/* comment $");
 			Assert.AreEqual("", indent.ThisLineIndent);
-			Assert.AreEqual("   ", indent.NewLineIndent);
+			Assert.AreEqual("   ", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -94,7 +94,7 @@ class Foo {
 		* line 2
 		**/$");
 			Assert.AreEqual("\t   ", indent.ThisLineIndent);
-			Assert.AreEqual("\t", indent.NewLineIndent);
+			Assert.AreEqual("\t", indent.NextLineIndent);
 		}
 
 		[Test]
@@ -105,7 +105,7 @@ class Foo { /* line 1
 				* line 2
 				* $");
 			Assert.AreEqual("               ", indent.ThisLineIndent);
-			Assert.AreEqual("               ", indent.NewLineIndent);
+			Assert.AreEqual("               ", indent.NextLineIndent);
 		}
 	}
 }

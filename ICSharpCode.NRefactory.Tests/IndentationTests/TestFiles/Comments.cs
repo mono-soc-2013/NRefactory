@@ -24,7 +24,7 @@ namespace Comments
 		             string text) // text
 		{
 			int i; // i
-
+			
 			for (i = 0; i < 42 /* 42; */; i++) /* *
 			                                      * Multi-line 
 			                                      */
@@ -32,17 +32,17 @@ namespace Comments
 				// break
 				break;
 			} // for
-
+			
 			/////////*
-
+			
 			while (true)
 				// comments don't affect continuation
 				;
-
+			
 			/********/ if (false) lock (this)
 					// /*
 					;
-
+			
 			{ /*/*/ }
 		}
 		/*/ still in comment } */
