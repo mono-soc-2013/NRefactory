@@ -2,13 +2,14 @@
 using ICSharpCode.NRefactory.Editor;
 using NUnit.Framework;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ICSharpCode.NRefactory.IndentationTests
 {
 	internal static class Helper
 	{
-		public static IndentEngine CreateEngine(string text, CSharpFormattingOptions formatOptions = null)
+		public static IDocumentIndentEngine CreateEngine(string text, CSharpFormattingOptions formatOptions = null)
 		{
 			var policy = formatOptions ?? FormattingOptionsFactory.CreateMono();
 
@@ -28,8 +29,8 @@ namespace ICSharpCode.NRefactory.IndentationTests
 			var document = new ReadOnlyDocument(sb.ToString());
 			var options = new TextEditorOptions();
 
-			var result = new IndentEngine(document, options, policy);
-			result.UpdateToOffset(offset);
+			var result = new CacheIndentEngine(new IndentEngine(options, policy), document);
+			result.UpdateEngine(offset);
 			return result;
 		}
 
@@ -40,18 +41,20 @@ namespace ICSharpCode.NRefactory.IndentationTests
 				var code = File.ReadAllText(filePath);
 				var policy = FormattingOptionsFactory.CreateMono();
 				var document = new ReadOnlyDocument(code);
-				var options = new TextEditorOptions();
-				var engine = new IndentEngine(document, options, policy);
+				var options = new TextEditorOptions { IndentBlankLines = false };
+				var engine = new CacheIndentEngine(new IndentEngine(options, policy), document);
 
-				engine.OnThisLineIndentFinalized += (sender, args) =>
+				foreach (var ch in code)
 				{
-					var e = (IndentEngine)sender;
-					Assert.IsFalse(e.NeedsReindent,
-							string.Format("Line: {0}, Indent: {1}, Current indent: {2}",
-							e.Location.Line.ToString(), engine.ThisLineIndent.Length, engine.CurrentIndent.Length));
-				};
+					if (options.EolMarker[0] == ch)
+					{
+						Assert.IsFalse(engine.NeedsReindent,
+								string.Format("Line: {0}, Indent: {1}, Current indent: {2}",
+								engine.Location.Line.ToString(), engine.ThisLineIndent.Length, engine.CurrentIndent.Length));
+					}
 
-				engine.UpdateToOffset(code.Length);
+					engine.Push(ch);
+				}
 			}
 			else
 			{
