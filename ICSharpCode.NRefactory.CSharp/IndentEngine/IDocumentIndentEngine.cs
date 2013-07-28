@@ -30,16 +30,16 @@ namespace ICSharpCode.NRefactory.CSharp
 	public interface IDocumentIndentEngine : IIndentEngine
 	{
 		/// <summary>
-		///		A reference to the document that's parsed by the engine.
+		///     A reference to the document that's parsed by the engine.
 		/// </summary>
 		IDocument Document { get; }
 
 		/// <summary>
-		///		Clones the engine and preserves the current state.
+		///     Clones the engine and preserves the current state.
 		/// </summary>
 		/// <returns>
-		///		An indentical clone which can operate without interference
-		///		with this engine.
+		///     An indentical clone which can operate without interference
+		///     with this engine.
 		/// </returns>
 		new IDocumentIndentEngine Clone();
 	}

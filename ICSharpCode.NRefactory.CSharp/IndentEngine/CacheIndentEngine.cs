@@ -29,57 +29,57 @@ using System;
 namespace ICSharpCode.NRefactory.CSharp
 {
 	/// <summary>
-	///		Represents a decorator of an IIndentEngine instance that provides
-	///		logic for reseting and updating the engine on text changed events.
+	///     Represents a decorator of an IIndentEngine instance that provides
+	///     logic for reseting and updating the engine on text changed events.
 	/// </summary>
 	/// <remarks>
-	///		The decorator is based on periodical caching of the engine's state and
-	///		delegating all logic behind indentation to the currently active engine.
+	///     The decorator is based on periodical caching of the engine's state and
+	///     delegating all logic behind indentation to the currently active engine.
 	/// </remarks>
 	public class CacheIndentEngine : IDisposable, IDocumentIndentEngine
 	{
 		#region Properties
 
 		/// <summary>
-		///		Represents the cache interval in number of chars pushed to the engine.
+		///     Represents the cache interval in number of chars pushed to the engine.
 		/// </summary>
 		/// <remarks>
-		///		When this many new chars are pushed to the engine, the currently active
-		///		engine gets cloned and added to the end of <see cref="cachedEngines"/>.
+		///     When this many new chars are pushed to the engine, the currently active
+		///     engine gets cloned and added to the end of <see cref="cachedEngines"/>.
 		/// </remarks>
 		readonly int cacheRate;
 
 		/// <summary>
-		///		Determines how much memory to reserve on initialization for the
-		///		cached engines.
+		///     Determines how much memory to reserve on initialization for the
+		///     cached engines.
 		/// </summary>
 		const int cacheCapacity = 25;
 
 		/// <summary>
-		///		Currently active engine.
+		///     Currently active engine.
 		/// </summary>
 		/// <remarks>
-		///		Should be equal to the last engine in <see cref="cachedEngines"/>.
+		///     Should be equal to the last engine in <see cref="cachedEngines"/>.
 		/// </remarks>
 		IIndentEngine currentEngine;
 
 		/// <summary>
-		///		List of cached engines sorted ascending by 
-		///		<see cref="IIndentEngine.Offset"/>.
+		///     List of cached engines sorted ascending by 
+		///     <see cref="IIndentEngine.Offset"/>.
 		/// </summary>
 		IIndentEngine[] cachedEngines;
 
 		/// <summary>
-		///		The number of engines that have been cached so far.
+		///     The number of engines that have been cached so far.
 		/// </summary>
 		/// <remarks>
-		///		Should be equal to: currentEngine.Offset / CacheRate
+		///     Should be equal to: currentEngine.Offset / CacheRate
 		/// </remarks>
 		int cachedEnginesCount;
 
 		/// <summary>
-		///		A readonly reference to the document that's parsed
-		///		by the <see cref="currentEngine"/>.
+		///     A readonly reference to the document that's parsed
+		///     by the <see cref="currentEngine"/>.
 		/// </summary>
 		readonly IDocument document;
 
@@ -88,17 +88,17 @@ namespace ICSharpCode.NRefactory.CSharp
 		#region Constructors
 
 		/// <summary>
-		///		Creates a new DocumentStateTracker instance.
+		///     Creates a new DocumentStateTracker instance.
 		/// </summary>
 		/// <param name="decoratedEngine">
-		///		An instance of <see cref="IIndentEngine"/> to which the
-		///		logic for indentation will be delegated.
+		///     An instance of <see cref="IIndentEngine"/> to which the
+		///     logic for indentation will be delegated.
 		/// </param>
 		/// <param name="document">
-		///		An instance of <see cref="IDocument"/> which is being parsed.
+		///     An instance of <see cref="IDocument"/> which is being parsed.
 		/// </param>
 		/// <param name="cacheRate">
-		///		The number of chars between caching.
+		///     The number of chars between caching.
 		/// </param>
 		public CacheIndentEngine(IIndentEngine decoratedEngine, IDocument document, int cacheRate = 2000)
 		{
@@ -117,7 +117,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		#region Methods
 
 		/// <summary>
-		///		Handles the TextChanged event of <see cref="CacheIndentEngine.document"/>.
+		///     Handles the TextChanged event of <see cref="CacheIndentEngine.document"/>.
 		/// </summary>
 		void textChanged(object sender, TextChangeEventArgs args)
 		{
@@ -125,7 +125,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		/// <summary>
-		///		Performs caching of the <see cref="CacheIndentEngine.currentEngine"/>.
+		///     Performs caching of the <see cref="CacheIndentEngine.currentEngine"/>.
 		/// </summary>
 		void cache()
 		{
@@ -147,7 +147,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		/// <summary>
-		///		Updates the engine to the end of <see cref="CacheIndentEngine.document"/>.
+		///     Updates the engine to the end of <see cref="CacheIndentEngine.document"/>.
 		/// </summary>
 		public void UpdateEngine()
 		{
@@ -155,15 +155,15 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		/// <summary>
-		///		Updates the engine to the given <paramref name="offset"/>.
+		///     Updates the engine to the given <paramref name="offset"/>.
 		/// </summary>
 		/// <param name="offset">
-		///		The offset to which the engine should be updated.
+		///     The offset to which the engine should be updated.
 		/// </param>
 		/// <remarks>
-		///		If the <paramref name="offset"/> is negative, the engine will
-		///		update to: document.TextLength + (offset % document.TextLength+1)
-		///		Otherwise it will update to: offset % document.TextLength+1
+		///     If the <paramref name="offset"/> is negative, the engine will
+		///     update to: document.TextLength + (offset % document.TextLength+1)
+		///     Otherwise it will update to: offset % document.TextLength+1
 		/// </remarks>
 		public void UpdateEngine(int offset)
 		{

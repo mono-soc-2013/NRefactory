@@ -169,41 +169,41 @@ namespace ICSharpCode.NRefactory.CSharp
 		#region Fields
 
 		/// <summary>
-		///		Represents the number of pushed chars.
+		///    Represents the number of pushed chars.
 		/// </summary>
 		internal int offset = 0;
 
 		/// <summary>
-		///		The current line number.
+		///    The current line number.
 		/// </summary>
 		internal int line = 1;
 
 		/// <summary>
-		///		The current column number.
+		///    The current column number.
 		/// </summary>
 		/// <remarks>
-		///		One char can take up multiple columns (e.g. \t).
+		///    One char can take up multiple columns (e.g. \t).
 		/// </remarks>
 		internal int column = 1;
 
 		/// <summary>
-		///		True if <see cref="char.IsWhiteSpace(char)"/> is true for all
-		///		chars at the current line.
+		///    True if <see cref="char.IsWhiteSpace(char)"/> is true for all
+		///    chars at the current line.
 		/// </summary>
 		internal bool isLineStart = true;
 
 		/// <summary>
-		///		Current char that's being pushed.
+		///    Current char that's being pushed.
 		/// </summary>
 		internal char currentChar = '\0';
 
 		/// <summary>
-		///		Last non-whitespace char that has been pushed.
+		///    Last non-whitespace char that has been pushed.
 		/// </summary>
 		internal char previousChar = '\0';
 
 		/// <summary>
-		///		Current indent level on this line.
+		///    Current indent level on this line.
 		/// </summary>
 		internal StringBuilder currentIndent = new StringBuilder();
 

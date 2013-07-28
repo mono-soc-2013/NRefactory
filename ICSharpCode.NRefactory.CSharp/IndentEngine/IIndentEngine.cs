@@ -78,11 +78,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		void Reset();
 
 		/// <summary>
-		///		Clones the engine and preserves the current state.
+		///     Clones the engine and preserves the current state.
 		/// </summary>
 		/// <returns>
-		///		An indentical clone which can operate without interference
-		///		with this engine.
+		///     An indentical clone which can operate without interference
+		///     with this engine.
 		/// </returns>
 		new IIndentEngine Clone();
 	}
