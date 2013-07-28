@@ -26,85 +26,119 @@
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.Editor;
 using System;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace ICSharpCode.NRefactory.Demo
 {
-	public partial class IndentDemo : UserControl, ITextSource
+	public partial class IndentDemo : UserControl
 	{
+		IDocument document;
 		CSharpFormattingOptions policy;
 		TextEditorOptions options;
-		IndentEngine indentEngine;
-		bool disableTextChangeEvents;
+		IDocumentIndentEngine indentEngine;
 
 		public IndentDemo()
 		{
 			InitializeComponent();
 
-			var document = new ReadOnlyDocument(this);
+			document = new StringBuilderDocument();
 			policy = FormattingOptionsFactory.CreateMono();
 			options = new TextEditorOptions();
-			indentEngine = new IndentEngine(document, options, policy);
-
-			indentEngine.OnThisLineIndentFinalized += (sender, args) =>
-			{
-				var e = (IndentEngine)sender;
-				if (e.NeedsReindent)
-				{
-					reindent(e);
-				}
-			};
+			indentEngine = new CacheIndentEngine(new IndentEngine(options, policy), document);
 		}
 
-		private void reindent(IndentEngine e)
+		private void reindent()
 		{
-			var line = textBoxIndent.Lines[indentEngine.Location.Line - 1];
+			var line = document.GetLineByNumber(indentEngine.Location.Line);
+			var length = document.GetText(line)
+			                     .TakeWhile(c => char.IsWhiteSpace(c))
+			                     .Count();
 
-			disableTextChangeEvents = true;
-			textBoxIndent.Text = string.Join(options.EolMarker, textBoxIndent.Lines.Take(indentEngine.Location.Line - 1)) +
-				options.EolMarker + e.ThisLineIndent + line.TrimStart(' ', '\t') + options.EolMarker;
-			disableTextChangeEvents = false;
+			document.Replace(line.Offset, length, indentEngine.ThisLineIndent);
+			refreshTextBox(indentEngine.ThisLineIndent.Length - length);
 		}
 
 		private void textBoxIndent_KeyDown(object sender, KeyEventArgs e)
 		{
-			if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back || (Control.ModifierKeys & e.KeyCode) != 0)
+			int carretOffset = 0;
+
+			if (e.KeyCode == Keys.Delete && textBoxIndent.SelectionStart < document.TextLength)
 			{
-				e.SuppressKeyPress = true;
+				if (textBoxIndent.SelectionLength <= 0)
+				{
+					document.Remove(textBoxIndent.SelectionStart, 1);
+				}
+				else
+				{
+					document.Remove(textBoxIndent.SelectionStart, textBoxIndent.SelectionLength);
+				}
 			}
-
-			textBoxIndent.SelectionStart = textBoxIndent.Text.Length;
-			textBoxIndent.ScrollToCaret();
-		}
-
-		private void textBoxIndent_TextChanged(object sender, EventArgs e)
-		{
-			if (disableTextChangeEvents)
+			else if (e.KeyCode == Keys.Back && textBoxIndent.SelectionStart > 0)
+			{
+				if (textBoxIndent.SelectionLength <= 0)
+				{
+					document.Remove(textBoxIndent.SelectionStart - 1, 1);
+					carretOffset = -1;
+				}
+				else
+				{
+					document.Remove(textBoxIndent.SelectionStart, textBoxIndent.SelectionLength);
+				}
+			}
+			else
 			{
 				return;
 			}
 
-			var ch = this.textBoxIndent.Text.LastOrDefault();
-			indentEngine.Push(ch);
+			refreshTextBox(carretOffset);
+			e.SuppressKeyPress = true;
+		}
 
-			if (indentEngine.NewLineChar == ch)
+		private void textBoxIndent_KeyPress(object sender, KeyPressEventArgs e)
+		{
+			var ch = e.KeyChar.ToString();
+			
+			if (options.EolMarker.Contains(ch))
 			{
-				textBoxIndent.AppendText(indentEngine.ThisLineIndent);
+				document.Replace(textBoxIndent.SelectionStart, textBoxIndent.SelectionLength, options.EolMarker);
+				refreshTextBox(options.EolMarker.Length);
+			}
+			else
+			{
+				document.Replace(textBoxIndent.SelectionStart, textBoxIndent.SelectionLength, ch);
+				refreshTextBox(1);
 			}
 
+			if (indentEngine.NeedsReindent)
+			{
+				reindent();
+			}
+
+			e.Handled = true;
+		}
+
+		private void refreshTextBox(int carretOffset = 0)
+		{
+			var carret = textBoxIndent.SelectionStart + carretOffset;
+			carret = Math.Max(0, Math.Min(document.TextLength, carret));
+
+			textBoxIndent.Text = document.Text;
+
+			textBoxIndent.SelectionStart = carret;
+		}
+
+		private void textBoxIndent_TextChanged(object sender, EventArgs e)
+		{
 			refreshInformationLabels();
 		}
 
 		private void btnReset_Click(object sender, EventArgs e)
 		{
 			indentEngine.Reset();
+			document.Remove(0, document.TextLength);
 
-			disableTextChangeEvents = true;
-			textBoxIndent.Text = string.Empty;
-			disableTextChangeEvents = false;
-
+			textBoxIndent.Text = document.Text;
 			refreshInformationLabels();
 		}
 
@@ -113,101 +147,14 @@ namespace ICSharpCode.NRefactory.Demo
 			lblThisLineIndent.Text = indentEngine.ThisLineIndent
 				.Replace("\t", new string(' ', options.IndentSize))
 				.Length.ToString();
-			lblNextLineIndent.Text = indentEngine.NewLineIndent
+			lblNextLineIndent.Text = indentEngine.NextLineIndent
 				.Replace("\t", new string(' ', options.IndentSize))
 				.Length.ToString();
 			lblCurrentIndent.Text = indentEngine.CurrentIndent
 				.Replace("\t", new string(' ', options.IndentSize))
 				.Length.ToString();
-			lblIsLineStart.Text = indentEngine.IsLineStart ? "Yes" : "No";
 			lblNeedsReindent.Text = indentEngine.NeedsReindent ? "True" : "False";
-			lblCurrentState.Text = indentEngine.CurrentState.GetType().Name;
 			lblLineNo.Text = indentEngine.Location.ToString();
-		}
-
-		public ITextSourceVersion Version
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public ITextSource CreateSnapshot()
-		{
-			return new StringTextSource(Text);
-		}
-
-		public ITextSource CreateSnapshot(int offset, int length)
-		{
-			return new StringTextSource(GetText(offset, length));
-		}
-
-		public System.IO.TextReader CreateReader()
-		{
-			return new StringReader(Text);
-		}
-
-		public System.IO.TextReader CreateReader(int offset, int length)
-		{
-			return new StringReader(GetText(offset, length));
-		}
-
-		public int TextLength
-		{
-			get { return Text.Length; }
-		}
-
-		public new string Text
-		{
-			get { return this.textBoxIndent.Text; }
-		}
-
-		public char GetCharAt(int offset)
-		{
-			return Text[offset];
-		}
-
-		public string GetText(int offset, int length)
-		{
-			return Text.Substring(offset, length);
-		}
-
-		public string GetText(ISegment segment)
-		{
-			return GetText(segment.Offset, segment.Length);
-		}
-
-		public void WriteTextTo(System.IO.TextWriter writer)
-		{
-			writer.Write(Text);
-		}
-
-		public void WriteTextTo(System.IO.TextWriter writer, int offset, int length)
-		{
-			writer.Write(GetText(offset, length));
-		}
-
-		public int IndexOf(char c, int startIndex, int count)
-		{
-			return Text.IndexOf(c, startIndex, count);
-		}
-
-		public int IndexOfAny(char[] anyOf, int startIndex, int count)
-		{
-			return Text.IndexOfAny(anyOf, startIndex, count);
-		}
-
-		public int IndexOf(string searchText, int startIndex, int count, StringComparison comparisonType)
-		{
-			return Text.IndexOf(searchText, startIndex, count, comparisonType);
-		}
-
-		public int LastIndexOf(char c, int startIndex, int count)
-		{
-			return Text.LastIndexOf(c, startIndex, count);
-		}
-
-		public int LastIndexOf(string searchText, int startIndex, int count, StringComparison comparisonType)
-		{
-			return Text.LastIndexOf(searchText, startIndex, count, comparisonType);
 		}
 	}
 }

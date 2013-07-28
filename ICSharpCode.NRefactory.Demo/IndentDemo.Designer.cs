@@ -35,11 +35,7 @@
 			this.lblNextLineIndent = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
 			this.lblNeedsReindent = new System.Windows.Forms.Label();
-			this.label4 = new System.Windows.Forms.Label();
-			this.lblCurrentState = new System.Windows.Forms.Label();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.lblIsLineStart = new System.Windows.Forms.Label();
-			this.label6 = new System.Windows.Forms.Label();
 			this.btnReset = new System.Windows.Forms.Button();
 			this.lblCurrentIndent = new System.Windows.Forms.Label();
 			this.label5 = new System.Windows.Forms.Label();
@@ -61,17 +57,18 @@
 			this.textBoxIndent.Multiline = true;
 			this.textBoxIndent.Name = "textBoxIndent";
 			this.textBoxIndent.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.textBoxIndent.Size = new System.Drawing.Size(668, 558);
+			this.textBoxIndent.Size = new System.Drawing.Size(668, 584);
 			this.textBoxIndent.TabIndex = 0;
 			this.textBoxIndent.WordWrap = false;
 			this.textBoxIndent.TextChanged += new System.EventHandler(this.textBoxIndent_TextChanged);
 			this.textBoxIndent.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxIndent_KeyDown);
+			this.textBoxIndent.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxIndent_KeyPress);
 			// 
 			// label1
 			// 
 			this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(17, 38);
+			this.label1.Location = new System.Drawing.Point(17, 12);
 			this.label1.Name = "label1";
 			this.label1.Padding = new System.Windows.Forms.Padding(5);
 			this.label1.Size = new System.Drawing.Size(122, 27);
@@ -84,7 +81,7 @@
 			this.lblThisLineIndent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lblThisLineIndent.AutoSize = true;
 			this.lblThisLineIndent.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblThisLineIndent.Location = new System.Drawing.Point(135, 38);
+			this.lblThisLineIndent.Location = new System.Drawing.Point(135, 12);
 			this.lblThisLineIndent.Name = "lblThisLineIndent";
 			this.lblThisLineIndent.Padding = new System.Windows.Forms.Padding(5);
 			this.lblThisLineIndent.Size = new System.Drawing.Size(27, 27);
@@ -96,7 +93,7 @@
 			// 
 			this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(17, 65);
+			this.label2.Location = new System.Drawing.Point(17, 39);
 			this.label2.Name = "label2";
 			this.label2.Padding = new System.Windows.Forms.Padding(5);
 			this.label2.Size = new System.Drawing.Size(123, 27);
@@ -109,7 +106,7 @@
 			this.lblNextLineIndent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lblNextLineIndent.AutoSize = true;
 			this.lblNextLineIndent.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblNextLineIndent.Location = new System.Drawing.Point(135, 65);
+			this.lblNextLineIndent.Location = new System.Drawing.Point(135, 39);
 			this.lblNextLineIndent.Name = "lblNextLineIndent";
 			this.lblNextLineIndent.Padding = new System.Windows.Forms.Padding(5);
 			this.lblNextLineIndent.Size = new System.Drawing.Size(27, 27);
@@ -121,7 +118,7 @@
 			// 
 			this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(268, 38);
+			this.label3.Location = new System.Drawing.Point(268, 12);
 			this.label3.Name = "label3";
 			this.label3.Padding = new System.Windows.Forms.Padding(5);
 			this.label3.Size = new System.Drawing.Size(123, 27);
@@ -134,39 +131,13 @@
 			this.lblNeedsReindent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lblNeedsReindent.AutoSize = true;
 			this.lblNeedsReindent.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblNeedsReindent.Location = new System.Drawing.Point(387, 38);
+			this.lblNeedsReindent.Location = new System.Drawing.Point(387, 12);
 			this.lblNeedsReindent.Name = "lblNeedsReindent";
 			this.lblNeedsReindent.Padding = new System.Windows.Forms.Padding(5);
 			this.lblNeedsReindent.Size = new System.Drawing.Size(57, 27);
 			this.lblNeedsReindent.TabIndex = 6;
 			this.lblNeedsReindent.Text = "False";
 			this.lblNeedsReindent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// label4
-			// 
-			this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.label4.AutoSize = true;
-			this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.label4.Location = new System.Drawing.Point(17, 12);
-			this.label4.Name = "label4";
-			this.label4.Padding = new System.Windows.Forms.Padding(5);
-			this.label4.Size = new System.Drawing.Size(108, 27);
-			this.label4.TabIndex = 7;
-			this.label4.Text = "Current state: ";
-			this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			// 
-			// lblCurrentState
-			// 
-			this.lblCurrentState.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.lblCurrentState.AutoSize = true;
-			this.lblCurrentState.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblCurrentState.Location = new System.Drawing.Point(135, 12);
-			this.lblCurrentState.Name = "lblCurrentState";
-			this.lblCurrentState.Padding = new System.Windows.Forms.Padding(5);
-			this.lblCurrentState.Size = new System.Drawing.Size(101, 27);
-			this.lblCurrentState.TabIndex = 8;
-			this.lblCurrentState.Text = "GlobalBody";
-			this.lblCurrentState.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
 			// splitContainer1
 			// 
@@ -182,14 +153,10 @@
 			// 
 			// splitContainer1.Panel2
 			// 
-			this.splitContainer1.Panel2.Controls.Add(this.lblIsLineStart);
-			this.splitContainer1.Panel2.Controls.Add(this.label6);
 			this.splitContainer1.Panel2.Controls.Add(this.btnReset);
 			this.splitContainer1.Panel2.Controls.Add(this.lblCurrentIndent);
 			this.splitContainer1.Panel2.Controls.Add(this.label5);
 			this.splitContainer1.Panel2.Controls.Add(this.lblLineNo);
-			this.splitContainer1.Panel2.Controls.Add(this.lblCurrentState);
-			this.splitContainer1.Panel2.Controls.Add(this.label4);
 			this.splitContainer1.Panel2.Controls.Add(this.label1);
 			this.splitContainer1.Panel2.Controls.Add(this.lblNeedsReindent);
 			this.splitContainer1.Panel2.Controls.Add(this.lblThisLineIndent);
@@ -198,35 +165,12 @@
 			this.splitContainer1.Panel2.Controls.Add(this.lblNextLineIndent);
 			this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
 			this.splitContainer1.Size = new System.Drawing.Size(668, 673);
-			this.splitContainer1.SplitterDistance = 558;
+			this.splitContainer1.SplitterDistance = 584;
 			this.splitContainer1.TabIndex = 9;
-			// 
-			// lblIsLineStart
-			// 
-			this.lblIsLineStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.lblIsLineStart.AutoSize = true;
-			this.lblIsLineStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblIsLineStart.Location = new System.Drawing.Point(387, 12);
-			this.lblIsLineStart.Name = "lblIsLineStart";
-			this.lblIsLineStart.Padding = new System.Windows.Forms.Padding(5);
-			this.lblIsLineStart.Size = new System.Drawing.Size(45, 27);
-			this.lblIsLineStart.TabIndex = 15;
-			this.lblIsLineStart.Text = "Yes";
-			// 
-			// label6
-			// 
-			this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(268, 12);
-			this.label6.Name = "label6";
-			this.label6.Padding = new System.Windows.Forms.Padding(5);
-			this.label6.Size = new System.Drawing.Size(94, 27);
-			this.label6.TabIndex = 14;
-			this.label6.Text = "Is line start: ";
 			// 
 			// btnReset
 			// 
-			this.btnReset.Location = new System.Drawing.Point(533, 65);
+			this.btnReset.Location = new System.Drawing.Point(533, 39);
 			this.btnReset.Name = "btnReset";
 			this.btnReset.Size = new System.Drawing.Size(119, 27);
 			this.btnReset.TabIndex = 13;
@@ -239,7 +183,7 @@
 			this.lblCurrentIndent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lblCurrentIndent.AutoSize = true;
 			this.lblCurrentIndent.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblCurrentIndent.Location = new System.Drawing.Point(387, 65);
+			this.lblCurrentIndent.Location = new System.Drawing.Point(387, 39);
 			this.lblCurrentIndent.Name = "lblCurrentIndent";
 			this.lblCurrentIndent.Padding = new System.Windows.Forms.Padding(5);
 			this.lblCurrentIndent.Size = new System.Drawing.Size(27, 27);
@@ -251,7 +195,7 @@
 			// 
 			this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(268, 65);
+			this.label5.Location = new System.Drawing.Point(268, 39);
 			this.label5.Name = "label5";
 			this.label5.Padding = new System.Windows.Forms.Padding(5);
 			this.label5.Size = new System.Drawing.Size(116, 27);
@@ -264,7 +208,7 @@
 			this.lblLineNo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lblLineNo.AutoSize = true;
 			this.lblLineNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-			this.lblLineNo.Location = new System.Drawing.Point(530, 12);
+			this.lblLineNo.Location = new System.Drawing.Point(530, 9);
 			this.lblLineNo.Name = "lblLineNo";
 			this.lblLineNo.Padding = new System.Windows.Forms.Padding(5);
 			this.lblLineNo.Size = new System.Drawing.Size(122, 27);
@@ -298,14 +242,10 @@
 		private System.Windows.Forms.Label lblNextLineIndent;
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.Label lblNeedsReindent;
-		private System.Windows.Forms.Label label4;
-		private System.Windows.Forms.Label lblCurrentState;
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private System.Windows.Forms.Label lblLineNo;
 		private System.Windows.Forms.Label lblCurrentIndent;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.Button btnReset;
-		private System.Windows.Forms.Label lblIsLineStart;
-		private System.Windows.Forms.Label label6;
 	}
 }
