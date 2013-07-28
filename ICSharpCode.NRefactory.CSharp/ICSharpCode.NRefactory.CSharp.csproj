@@ -205,6 +205,9 @@
     <Compile Include="CSharpProjectContent.cs" />
     <Compile Include="Formatter\CSharpFormattingOptions.cs" />
     <Compile Include="Formatter\Indent.cs" />
+    <Compile Include="IndentEngine\CacheIndentEngine.cs" />
+    <Compile Include="IndentEngine\IDocumentIndentEngine.cs" />
+    <Compile Include="IndentEngine\IIndentEngine.cs" />
     <Compile Include="IndentEngine\IndentEngine.cs" />
     <Compile Include="IndentEngine\IndentState.cs" />
     <Compile Include="OutputVisitor\CodeDomConvertVisitor.cs" />
