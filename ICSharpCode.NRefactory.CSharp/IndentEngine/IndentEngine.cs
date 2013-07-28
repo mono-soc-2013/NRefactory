@@ -23,7 +23,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using ICSharpCode.NRefactory.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,78 +30,123 @@ using System.Text;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
-	public enum IndentationMode
-	{
-		OnTheFly,
-		Intrusive
-	}
-
 	/// <summary>
-	///     The indentation engine.
+	///     Indentation engine based on a state machine.
+	///     Supports only pushing new chars to the end.
 	/// </summary>
 	/// <remarks>
 	///     Represents the context for transitions between <see cref="IndentState"/>.
 	///     Delegates the responsibility for pushing a new char to the current 
 	///     state and changes between states depending on the pushed chars.
 	/// </remarks>
-	public class IndentEngine : ICloneable
+	public class IndentEngine : IIndentEngine
 	{
 		#region Properties
 
 		/// <summary>
-		///     Document that's parsed by the engine.
-		/// </summary>
-		internal readonly IDocument Document;
-
-		/// <summary>
 		///     Formatting options.
 		/// </summary>
-		internal readonly CSharpFormattingOptions Options;
+		internal readonly CSharpFormattingOptions formattingOptions;
 
 		/// <summary>
 		///     Text editor options.
 		/// </summary>
-		internal readonly TextEditorOptions TextEditorOptions;
+		internal readonly TextEditorOptions textEditorOptions;
 
 		/// <summary>
 		///     Represents the new line character.
 		/// </summary>
-		public char NewLineChar
-		{
-			get
-			{
-				return TextEditorOptions.EolMarker.Last();
-			}
-		}
-
-		/// <summary>
-		///	    Determines when the reindentation happens.
-		/// </summary>
-		public IndentationMode IndentationMode
-		{
-			get;
-			set;
-		}
+		internal readonly char newLineChar;
 
 		/// <summary>
 		///     The current indentation state.
 		/// </summary>
-		public IndentState CurrentState;
+		internal IndentState currentState;
 
 		/// <summary>
-		///     The current location of the engine in <see cref="Document"/>.
+		///     Stores the conditional symbols of the #define directives.
 		/// </summary>
-		public TextLocation Location
+		internal HashSet<string> conditionalSymbols;
+
+		/// <summary>
+		///     True if any of the preprocessor if/elif directives in the current
+		///     block (between #if and #endif) were evaluated to true.
+		/// </summary>
+		internal bool ifDirectiveEvalResult;
+
+		/// <summary>
+		///     Stores the last sequence of characters that can form a
+		///     valid keyword or variable name.
+		/// </summary>
+		internal StringBuilder wordToken;
+
+		#endregion
+
+		#region IDocumentIndentEngine
+
+		/// <inheritdoc />
+		public string ThisLineIndent
 		{
 			get
 			{
-				return new TextLocation(line, column);
+				// OPTION: IndentBlankLines
+				// remove the indentation of this line if isLineStart is true
+				if (!textEditorOptions.IndentBlankLines && isLineStart)
+				{
+					return string.Empty;
+				}
+
+				return currentState.ThisLineIndent.IndentString;
 			}
 		}
 
-		/// <summary>
-		///     The current offset of the engine in <see cref="Document"/>.
-		/// </summary>
+		/// <inheritdoc />
+		public string NextLineIndent
+		{
+			get
+			{
+				return currentState.NextLineIndent.IndentString;
+			}
+		}
+
+		/// <inheritdoc />
+		public string CurrentIndent
+		{
+			get
+			{
+				return currentIndent.ToString();
+			}
+		}
+
+		/// <inheritdoc />
+		/// <remarks>
+		///     This is set depending on the current <see cref="Location"/> and
+		///     can change its value until the <see cref="newLineChar"/> char is
+		///     pushed. If this is true, that doesn't necessarily mean that the
+		///     current line has an incorrect indent (this can be determined
+		///     only at the end of the current line).
+		/// </remarks>
+		public bool NeedsReindent
+		{
+			get
+			{
+				// return true if it's the first column of the line and it has an indent
+				if (Location.Column == 1)
+				{
+					return ThisLineIndent.Length > 0;
+				}
+
+				// ignore incorrect indentations when there's only ws on this line
+				if (isLineStart)
+				{
+					return false;
+				}
+
+				return ThisLineIndent != CurrentIndent.ToString();
+			}
+		}
+
+		/// <inheritdoc />
 		public int Offset
 		{
 			get
@@ -111,124 +155,92 @@ namespace ICSharpCode.NRefactory.CSharp
 			}
 		}
 
-		/// <summary>
-		///     The indentation string of the current line.
-		/// </summary>
-		public string ThisLineIndent
+		/// <inheritdoc />
+		public TextLocation Location
 		{
 			get
 			{
-				return CurrentState.ThisLineIndent.IndentString;
+				return new TextLocation(line, column);
 			}
 		}
-
-		/// <summary>
-		///     The indentation string of the next line.
-		/// </summary>
-		public string NewLineIndent
-		{
-			get
-			{
-				return CurrentState.NextLineIndent.IndentString;
-			}
-		}
-
-		/// <summary>
-		///     True if the current line needs to be reindented.
-		/// </summary>
-		/// <remarks>
-		///     This is set depending on the current <see cref="Location"/> and
-		///     can change its value until the <see cref="NewLineChar"/> char is
-		///     pushed. If this is true, that doesn't necessarily mean that the
-		///     current line has an incorrect indent (this can be determined
-		///     only at the end of the current line and the
-		///     <see cref="OnThisLineIndentFinalized"/> event will be raised.
-		/// </remarks>
-		public bool NeedsReindent
-		{
-			get
-			{
-				var needsReindent = !IsLineStart && (ThisLineIndent != CurrentIndent.ToString());
-
-				if (IndentationMode == IndentationMode.Intrusive)
-				{
-					return needsReindent;
-				}
-				else
-				{
-					return CurrentChar == NewLineChar && needsReindent;
-				}
-			}
-		}
-
-		/// <summary>
-		///     Raised when the <see cref="NewLineChar"/> is pushed to the engine
-		///     and <see cref="ThisLineIndent"/> will no longer change.
-		/// </summary>
-		/// <remarks>
-		///     This is the only way to correctly get the calculated indent
-		///     since the <see cref="ThisLineIndent"/> is immediately
-		///     replaced with <see cref="NewLineIndent"/> afterwards.
-		/// </remarks>
-		public event EventHandler OnThisLineIndentFinalized;
-
-		/// <summary>
-		///     Stores the current indent on the beginning of the current line.
-		/// </summary>
-		public StringBuilder CurrentIndent = new StringBuilder();
-
-		/// <summary>
-		///     Stores conditional symbols of the #define directives.
-		/// </summary>
-		public HashSet<string> ConditionalSymbols = new HashSet<string>();
-
-		/// <summary>
-		///     True if any of the preprocessor if/elif directives in the current
-		///     block (between #if and #endif) were evaluated to true.
-		/// </summary>
-		public bool IfDirectiveEvalResult;
 
 		#endregion
 
 		#region Fields
 
+		/// <summary>
+		///		Represents the number of pushed chars.
+		/// </summary>
 		internal int offset = 0;
+
+		/// <summary>
+		///		The current line number.
+		/// </summary>
 		internal int line = 1;
+
+		/// <summary>
+		///		The current column number.
+		/// </summary>
+		/// <remarks>
+		///		One char can take up multiple columns (e.g. \t).
+		/// </remarks>
 		internal int column = 1;
 
-		public bool IsLineStart = true;
-		public char CurrentChar = '\0';
-		public char PreviousChar = '\0';
+		/// <summary>
+		///		True if <see cref="char.IsWhiteSpace(char)"/> is true for all
+		///		chars at the current line.
+		/// </summary>
+		internal bool isLineStart = true;
+
+		/// <summary>
+		///		Current char that's being pushed.
+		/// </summary>
+		internal char currentChar = '\0';
+
+		/// <summary>
+		///		Last non-whitespace char that has been pushed.
+		/// </summary>
+		internal char previousChar = '\0';
+
+		/// <summary>
+		///		Current indent level on this line.
+		/// </summary>
+		internal StringBuilder currentIndent = new StringBuilder();
 
 		#endregion
 
 		#region Constructors
 
-		public IndentEngine(IDocument document, TextEditorOptions textEditorOptions, CSharpFormattingOptions formattingOptions)
+		public IndentEngine(TextEditorOptions textEditorOptions, CSharpFormattingOptions formattingOptions)
 		{
-			this.Document = document;
-			this.Options = formattingOptions;
-			this.TextEditorOptions = textEditorOptions;
-			this.CurrentState = IndentStateFactory.Default(this);
+			this.formattingOptions = formattingOptions;
+			this.textEditorOptions = textEditorOptions;
+
+			this.currentState = IndentStateFactory.Default(this);
+
+			this.conditionalSymbols = new HashSet<string>();
+			this.wordToken = new StringBuilder();
+			this.newLineChar = textEditorOptions.EolMarker[0];
 		}
 
 		public IndentEngine(IndentEngine prototype)
 		{
-			this.Document = prototype.Document;
-			this.Options = prototype.Options;
-			this.TextEditorOptions = prototype.TextEditorOptions;
+			this.formattingOptions = prototype.formattingOptions;
+			this.textEditorOptions = prototype.textEditorOptions;
 
-			this.CurrentState = prototype.CurrentState.Clone();
-			this.ConditionalSymbols = new HashSet<string>(prototype.ConditionalSymbols);
-			this.IfDirectiveEvalResult = prototype.IfDirectiveEvalResult;
-			this.CurrentIndent = new StringBuilder(prototype.CurrentIndent.ToString());
+			this.newLineChar = prototype.newLineChar;
+			this.currentState = prototype.currentState.Clone(this);
+			this.conditionalSymbols = new HashSet<string>(prototype.conditionalSymbols);
+			this.wordToken = new StringBuilder(prototype.wordToken.ToString());
+			this.ifDirectiveEvalResult = prototype.ifDirectiveEvalResult;
 
 			this.offset = prototype.offset;
 			this.line = prototype.line;
 			this.column = prototype.column;
-			this.IsLineStart = prototype.IsLineStart;
-			this.CurrentChar = prototype.CurrentChar;
-			this.PreviousChar = prototype.PreviousChar;
+			this.isLineStart = prototype.isLineStart;
+			this.currentChar = prototype.currentChar;
+			this.previousChar = prototype.previousChar; 
+			this.currentIndent = new StringBuilder(prototype.CurrentIndent.ToString());
 		}
 
 		#endregion
@@ -240,7 +252,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			return Clone();
 		}
 
-		public IndentEngine Clone()
+		/// <inheritdoc />
+		public IIndentEngine Clone()
 		{
 			return new IndentEngine(this);
 		}
@@ -249,59 +262,59 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		#region Methods
 
-		/// <summary>
-		///     Resets the engine.
-		/// </summary>
+		/// <inheritdoc />
 		public void Reset()
 		{
-			CurrentState = IndentStateFactory.Default(this);
-			ConditionalSymbols.Clear();
-			IfDirectiveEvalResult = false;
-			CurrentIndent.Length = 0;
+			currentState = IndentStateFactory.Default(this);
+			conditionalSymbols.Clear();
+			ifDirectiveEvalResult = false;
 
 			offset = 0;
 			line = 1;
 			column = 1;
-			IsLineStart = true;
-			CurrentChar = '\0';
-			PreviousChar = '\0';
+			isLineStart = true;
+			currentChar = '\0';
+			previousChar = '\0';
+			currentIndent.Length = 0;
 		}
 
-		/// <summary>
-		///     Calls the <see cref="OnThisLineIndentFinalized"/> event.
-		/// </summary>
-		internal void ThisLineIndentFinalized()
-		{
-			if (OnThisLineIndentFinalized != null)
-			{
-				OnThisLineIndentFinalized(this, EventArgs.Empty);
-			}
-		}
-
-		/// <summary>
-		///     Pushes a new char into the current state which calculates the new
-		///     indentation level.
-		/// </summary>
-		/// <param name="ch">
-		///     A new character.
-		/// </param>
+		/// <inheritdoc />
 		public void Push(char ch)
 		{
-			CurrentState.Push(CurrentChar = ch);
-
-			if (!TextEditorOptions.EolMarker.Contains(ch))
+			// append this char to the wordbuf if it can form a valid keyword, otherwise check
+			// if the last sequence of chars form a valid keyword and reset the wordbuf.
+			if ((wordToken.Length == 0 ? char.IsLetter(ch) : char.IsLetterOrDigit(ch)) || ch == '_')
 			{
-				IsLineStart &= char.IsWhiteSpace(ch);
+				wordToken.Append(ch);
+			}
+			else
+			{
+				currentState.CheckKeyword(wordToken.ToString());
+				wordToken.Length = 0;
+			}
 
-				if (IsLineStart)
+			currentState.Push(currentChar = ch);
+
+			offset++;
+			// ignore whitespace and newline chars
+			if (!char.IsWhiteSpace(currentChar) && !textEditorOptions.EolMarker.Contains(currentChar))
+			{
+				previousChar = currentChar;
+			}
+
+			if (!textEditorOptions.EolMarker.Contains(ch))
+			{
+				isLineStart &= char.IsWhiteSpace(ch);
+
+				if (isLineStart)
 				{
-					CurrentIndent.Append(ch);
+					currentIndent.Append(ch);
 				}
 
 				if (ch == '\t')
 				{
-					var nextTabStop = (column - 1 + TextEditorOptions.IndentSize) / TextEditorOptions.IndentSize;
-					column = 1 + nextTabStop * TextEditorOptions.IndentSize;
+					var nextTabStop = (column - 1 + textEditorOptions.IndentSize) / textEditorOptions.IndentSize;
+					column = 1 + nextTabStop * textEditorOptions.IndentSize;
 				}
 				else
 				{
@@ -310,44 +323,17 @@ namespace ICSharpCode.NRefactory.CSharp
 			}
 			else
 			{
-				if (ch != NewLineChar)
+				// there can be more than one chars that determine the EOL,
+				// the engine uses only one of them defined with newLineChar
+				if (ch != newLineChar)
 				{
-					// there can be more than one chars that determine the EOL,
-					// the engine uses only one of them defined with NewLineChar
 					return;
 				}
 
-				CurrentIndent.Length = 0;
-				IsLineStart = true;
+				currentIndent.Length = 0;
+				isLineStart = true;
 				column = 1;
 				line++;
-			}
-
-			offset++;
-			// ignore whitespace and newline chars
-			if (!char.IsWhiteSpace(CurrentChar) && !TextEditorOptions.EolMarker.Contains(CurrentChar))
-			{
-				PreviousChar = CurrentChar;
-			}
-		}
-
-		/// <summary>
-		///     Parses the <see cref="Document"/> from <see cref="offset"/>
-		///     to <paramref name="toOffset"/>.
-		/// </summary>
-		/// <param name="toOffset">
-		///     End offset.
-		/// </param>
-		public void UpdateToOffset(int toOffset)
-		{
-			if (toOffset < offset)
-			{
-				Reset();
-			}
-
-			for (int i = offset; i < toOffset; i++)
-			{
-				Push(Document.GetCharAt(i));
 			}
 		}
 
@@ -357,27 +343,27 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public bool IsInsidePreprocessorDirective
 		{
-			get { return CurrentState is PreProcessorState; }
+			get { return currentState is PreProcessorState; }
 		}
 
 		public bool IsInsidePreprocessorComment
 		{
-			get { return CurrentState is PreProcessorCommentState; }
+			get { return currentState is PreProcessorCommentState; }
 		}
 
 		public bool IsInsideStringLiteral
 		{
-			get { return CurrentState is StringLiteralState; }
+			get { return currentState is StringLiteralState; }
 		}
 
 		public bool IsInsideVerbatimString
 		{
-			get { return CurrentState is VerbatimStringState; }
+			get { return currentState is VerbatimStringState; }
 		}
 
 		public bool IsInsideCharacter
 		{
-			get { return CurrentState is CharacterState; }
+			get { return currentState is CharacterState; }
 		}
 
 		public bool IsInsideString
@@ -387,17 +373,17 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public bool IsInsideLineComment
 		{
-			get { return CurrentState is LineCommentState; }
+			get { return currentState is LineCommentState; }
 		}
 
 		public bool IsInsideMultiLineComment
 		{
-			get { return CurrentState is MultiLineCommentState; }
+			get { return currentState is MultiLineCommentState; }
 		}
 
 		public bool IsInsideDocLineComment
 		{
-			get { return CurrentState is DocCommentState; }
+			get { return currentState is DocCommentState; }
 		}
 
 		public bool IsInsideComment
@@ -415,15 +401,15 @@ namespace ICSharpCode.NRefactory.CSharp
 			get { return IsInsideOrdinaryComment || IsInsideString; }
 		}
 
-		//public bool LineBeganInsideVerbatimString
-		//{
-		//	get { throw new NotImplementedException(); }
-		//}
+		public bool LineBeganInsideVerbatimString
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-		//public bool LineBeganInsideMultiLineComment
-		//{
-		//	get { throw new NotImplementedException(); }
-		//}
+		public bool LineBeganInsideMultiLineComment
+		{
+			get { throw new NotImplementedException(); }
+		}
 
 		#endregion
 	}

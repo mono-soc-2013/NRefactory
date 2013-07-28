@@ -57,7 +57,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <summary>
 		///     The indentation of the current line.
 		///     This is set when the state is created and will be changed to
-		///     <see cref="NextLineIndent"/> when the <see cref="IndentEngine.NewLineChar"/> 
+		///     <see cref="NextLineIndent"/> when the <see cref="IndentEngine.newLineChar"/> 
 		///     is pushed.
 		/// </summary>
 		public Indent ThisLineIndent;
@@ -68,12 +68,6 @@ namespace ICSharpCode.NRefactory.CSharp
 		///     on the pushed chars.
 		/// </summary>
 		public Indent NextLineIndent;
-
-		/// <summary>
-		///     Stores the last sequence of characters that can form a
-		///     valid keyword or variable name.
-		/// </summary>
-		public StringBuilder WordToken;
 
 		#endregion
 
@@ -91,8 +85,6 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </param>
 		protected IndentState(IndentEngine engine, IndentState parent = null)
 		{
-			WordToken = new StringBuilder();
-
 			Parent = parent;
 			Engine = engine;
 
@@ -106,12 +98,14 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <param name="prototype">
 		///     The prototype state.
 		/// </param>
-		protected IndentState(IndentState prototype)
+		/// <param name="engine">
+		///     The engine of the new state.
+		/// </param>
+		protected IndentState(IndentState prototype, IndentEngine engine)
 		{
-			Engine = prototype.Engine;
-			Parent = prototype.Parent.Clone();
+			Engine = engine;
+			Parent = prototype.Parent != null ? prototype.Parent.Clone(engine) : null;
 
-			WordToken = new StringBuilder(prototype.WordToken.ToString());
 			ThisLineIndent = prototype.ThisLineIndent.Clone();
 			NextLineIndent = prototype.NextLineIndent.Clone();
 		}
@@ -122,10 +116,10 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		object ICloneable.Clone()
 		{
-			return Clone();
+			return Clone(Engine);
 		}
 
-		public abstract IndentState Clone();
+		public abstract IndentState Clone(IndentEngine engine);
 
 		#endregion
 
@@ -141,7 +135,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </remarks>
 		public virtual void InitializeState()
 		{
-			ThisLineIndent = new Indent(Engine.TextEditorOptions);
+			ThisLineIndent = new Indent(Engine.textEditorOptions);
 			NextLineIndent = ThisLineIndent.Clone();
 		}
 
@@ -154,9 +148,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			// it back to its parent (and so on recursively if the parent 
 			// state also exits). Otherwise, the parent state wouldn't
 			// know that the engine isn't on the same line anymore.
-			if (Engine.CurrentChar == Engine.NewLineChar)
+			if (Engine.currentChar == Engine.newLineChar)
 			{
-				Parent.Push(Engine.NewLineChar);
+				Parent.Push(Engine.newLineChar);
 			}
             
 			// when a state exits the engine stays on the same line and this
@@ -175,7 +169,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		public void ChangeState<T>()
 			where T : IndentState
 		{
-			Engine.CurrentState = IndentStateFactory.Create<T>(Engine.CurrentState);
+			Engine.currentState = IndentStateFactory.Create<T>(Engine.currentState);
 		}
 
 		/// <summary>
@@ -185,7 +179,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		public void ExitState()
 		{
 			OnExit();
-			Engine.CurrentState = Engine.CurrentState.Parent;
+			Engine.currentState = Engine.currentState.Parent;
 		}
 
 		/// <summary>
@@ -197,37 +191,9 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </param>
 		public virtual void Push(char ch)
 		{
-			// append this char to the wordbuf if it can form a valid keyword, otherwise check
-			// if the last sequence of chars form a valid keyword and reset the wordbuf.
-			if ((WordToken.Length == 0 ? char.IsLetter(ch) : char.IsLetterOrDigit(ch)) || ch == '_')
+			// replace ThisLineIndent with NextLineIndent if the newLineChar is pushed
+			if (ch == Engine.newLineChar)
 			{
-				WordToken.Append(ch);
-			}
-			else
-			{
-				CheckKeyword(WordToken.ToString());
-				WordToken.Length = 0;
-			}
-
-			if (ch == Engine.NewLineChar)
-			{
-				if (Engine.IsLineStart && !Engine.TextEditorOptions.IndentBlankLines)
-				{
-					ThisLineIndent = new Indent(Engine.TextEditorOptions);
-				}
-
-				if (Engine.CurrentState == this)
-				{
-					// if we got this far, the current line indent becomes permanent,
-					// it's replaced with the next line indent and we can raise an
-					// event that can perform text-replace actions on the document.
-					// NOTE: It's possible that multiple states will execute its push
-					// methods on the same newline char, but only the current state of
-					// the engine should raise this event. See the OnExit method for
-					// an example when this will happen.
-					Engine.ThisLineIndentFinalized();
-				}
-                
 				ThisLineIndent = NextLineIndent.Clone();
 			}
 		}
@@ -336,16 +302,16 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public NullState(NullState prototype)
-			: base(prototype)
+		public NullState(NullState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void Push(char ch)
 		{ }
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new NullState(this);
+			return new NullState(this, engine);
 		}
 	}
 
@@ -372,7 +338,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			{ '{', state => state.ChangeState<BracesBodyState>() }, 
 			{ '(', state => state.ChangeState<ParenthesesBodyState>() }, 
 			{ '[', state => state.ChangeState<SquareBracketsBodyState>() },
-			// since the '<' char is also used as the 'less-than' operator,
+			// TODO: Since the '<' char is also used as the 'less-than' operator,
 			// until the logic for distinguishing this two cases is implemented
 			// this state must not define this next transition.
 			// { '<', state => state.ChangeState<AngleBracketsBody>() }
@@ -388,29 +354,29 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		protected BracketsBodyBaseState(BracketsBodyBaseState prototype)
-			: base(prototype)
+		protected BracketsBodyBaseState(BracketsBodyBaseState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void Push(char ch)
 		{
 			base.Push(ch);
 
-			if (ch == '#' && Engine.IsLineStart)
+			if (ch == '#' && Engine.isLineStart)
 			{
 				ChangeState<PreProcessorState>();
 			}
-			else if (ch == '/' && Engine.PreviousChar == '/')
+			else if (ch == '/' && Engine.previousChar == '/')
 			{
 				ChangeState<LineCommentState>();
 			}
-			else if (ch == '*' && Engine.PreviousChar == '/')
+			else if (ch == '*' && Engine.previousChar == '/')
 			{
 				ChangeState<MultiLineCommentState>();
 			}
 			else if (ch == '"')
 			{
-				if (Engine.PreviousChar == '@')
+				if (Engine.previousChar == '@')
 				{
 					ChangeState<VerbatimStringState>();
 				}
@@ -429,6 +395,11 @@ namespace ICSharpCode.NRefactory.CSharp
 			}
 			else if (ch == ClosedBracket)
 			{
+				if (Engine.isLineStart)
+				{
+					ThisLineIndent = Parent.ThisLineIndent.Clone();
+				}
+
 				ExitState();
 			}
 		}
@@ -455,14 +426,13 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public GlobalBodyState(GlobalBodyState prototype)
-			: base(prototype)
+		public GlobalBodyState(GlobalBodyState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
-
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new GlobalBodyState(this);
+			return new GlobalBodyState(this, engine);
 		}
 	}
 
@@ -512,8 +482,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			CurrentStatement = Statement.None;
 		}
 
-		public BracesBodyState(BracesBodyState prototype)
-			: base(prototype)
+		public BracesBodyState(BracesBodyState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			CurrentBody = prototype.CurrentBody;
 			NextBody = prototype.NextBody;
@@ -539,7 +509,8 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void Push(char ch)
 		{
-			if (ch == ':' && Engine.IsLineStart)
+			// try to capture ': base(...)' and inherit statements when they are on a new line
+			if (ch == ':' && Engine.isLineStart)
 			{
 				ThisLineIndent.Push(IndentType.Continuation);
 			}
@@ -562,8 +533,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			{
 				NextLineIndent.ExtraSpaces = Engine.column - NextLineIndent.CurIndent - 1;
 			}
-			else if (ch == Engine.NewLineChar && NextLineIndent.ExtraSpaces > 0 &&
-				    (Engine.PreviousChar == '=' || Engine.PreviousChar == '.'))
+			else if (ch == Engine.newLineChar && NextLineIndent.ExtraSpaces > 0 &&
+				    (Engine.previousChar == '=' || Engine.previousChar == '.'))
 			{
 				// the last significant pushed char was '=' or '.' and we added
 				// extra spaces to align the next line, but the newline char was
@@ -571,10 +542,6 @@ namespace ICSharpCode.NRefactory.CSharp
 				// with one continuation indent.
 				NextLineIndent.ExtraSpaces = 0;
 				NextLineIndent.Push(IndentType.Continuation);
-			}
-			else if (ch == ClosedBracket && Engine.IsLineStart)
-			{
-				ThisLineIndent = Parent.ThisLineIndent.Clone();
 			}
 
 			base.Push(ch);
@@ -595,9 +562,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			AddIndentation(CurrentBody);
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new BracesBodyState(this);
+			return new BracesBodyState(this, engine);
 		}
 
 		#region Helpers
@@ -675,6 +642,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			{
 				ChangeState<SwitchCaseState>();
 			}
+			// try to capture 'where T : someClass' statements when they are on a new line 
 			else if (keyword == "where" && !IsRightHandExpression)
 			{
 				ThisLineIndent.Push(IndentType.Continuation);
@@ -724,22 +692,22 @@ namespace ICSharpCode.NRefactory.CSharp
 					NextLineIndent.Push(IndentType.Block);
 					break;
 				case Body.Namespace:
-					AddIndentation(Engine.Options.NamespaceBraceStyle);
+					AddIndentation(Engine.formattingOptions.NamespaceBraceStyle);
 					break;
 				case Body.Class:
-					AddIndentation(Engine.Options.ClassBraceStyle);
+					AddIndentation(Engine.formattingOptions.ClassBraceStyle);
 					break;
 				case Body.Struct:
-					AddIndentation(Engine.Options.StructBraceStyle);
+					AddIndentation(Engine.formattingOptions.StructBraceStyle);
 					break;
 				case Body.Interface:
-					AddIndentation(Engine.Options.InterfaceBraceStyle);
+					AddIndentation(Engine.formattingOptions.InterfaceBraceStyle);
 					break;
 				case Body.Enum:
-					AddIndentation(Engine.Options.EnumBraceStyle);
+					AddIndentation(Engine.formattingOptions.EnumBraceStyle);
 					break;
 				case Body.Switch:
-					if (Engine.Options.IndentSwitchBody)
+					if (Engine.formattingOptions.IndentSwitchBody)
 						NextLineIndent.Push(IndentType.Empty);
 					break;
 				default:
@@ -766,8 +734,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public SwitchCaseState(SwitchCaseState prototype)
-			: base(prototype)
+		public SwitchCaseState(SwitchCaseState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void Push(char ch)
@@ -808,9 +776,9 @@ namespace ICSharpCode.NRefactory.CSharp
 		public override void OnExit()
 		{ }
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new SwitchCaseState(this);
+			return new SwitchCaseState(this, engine);
 		}
 	}
 
@@ -835,8 +803,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public ParenthesesBodyState(ParenthesesBodyState prototype)
-			: base(prototype)
+		public ParenthesesBodyState(ParenthesesBodyState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void InitializeState()
@@ -847,9 +815,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new ParenthesesBodyState(this);
+			return new ParenthesesBodyState(this, engine);
 		}
 	}
 
@@ -874,8 +842,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public SquareBracketsBodyState(SquareBracketsBodyState prototype)
-			: base(prototype)
+		public SquareBracketsBodyState(SquareBracketsBodyState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void InitializeState()
@@ -886,9 +854,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new SquareBracketsBodyState(this);
+			return new SquareBracketsBodyState(this, engine);
 		}
 	}
 
@@ -913,8 +881,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public AngleBracketsBodyState(AngleBracketsBodyState prototype)
-			: base(prototype)
+		public AngleBracketsBodyState(AngleBracketsBodyState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void InitializeState()
@@ -925,9 +893,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new AngleBracketsBodyState(this);
+			return new AngleBracketsBodyState(this, engine);
 		}
 	}
 
@@ -942,7 +910,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	/// </summary>
 	/// <remarks>
 	///     Activated when the '#' char is pushed and the 
-	///     <see cref="IndentEngine.IsLineStart"/> is true.
+	///     <see cref="IndentEngine.isLineStart"/> is true.
 	/// </remarks>
 	public class PreProcessorState : IndentState
 	{
@@ -964,8 +932,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			DirectiveStatement = new StringBuilder();
 		}
 
-		public PreProcessorState(PreProcessorState prototype)
-			: base(prototype)
+		public PreProcessorState(PreProcessorState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			DirectiveType = prototype.DirectiveType;
 			DirectiveStatement = new StringBuilder(prototype.DirectiveStatement.ToString());
@@ -973,6 +941,15 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void Push(char ch)
 		{
+			// HACK: if this change would be left for the CheckKeyword method, we will lose
+			//       it if the next pushed char is newLineChar since ThisLineIndent will be 
+			//       immediately replaced with NextLineIndent
+			if (Engine.wordToken.Length == "endregion".Length && 
+			    Engine.wordToken.ToString() == "endregion")
+			{
+				ThisLineIndent = Parent.NextLineIndent.Clone();
+			}
+
 			base.Push(ch);
 
 			if (DirectiveType != PreProcessorDirective.None)
@@ -980,17 +957,17 @@ namespace ICSharpCode.NRefactory.CSharp
 				DirectiveStatement.Append(ch);
 			}
 
-			if (ch == Engine.NewLineChar)
+			if (ch == Engine.newLineChar)
 			{
 				ExitState();
 
 				switch (DirectiveType)
 				{
 					case PreProcessorDirective.If:
-						if (!Engine.IfDirectiveEvalResult)
+						if (!Engine.ifDirectiveEvalResult)
 						{
-							Engine.IfDirectiveEvalResult = eval(DirectiveStatement.ToString());
-							if (Engine.IfDirectiveEvalResult)
+							Engine.ifDirectiveEvalResult = eval(DirectiveStatement.ToString());
+							if (Engine.ifDirectiveEvalResult)
 							{
 								// the if/elif directive is true -> continue with the previous state
 							}
@@ -1009,7 +986,7 @@ namespace ICSharpCode.NRefactory.CSharp
 						}
 						break;
 					case PreProcessorDirective.Else:
-						if (Engine.IfDirectiveEvalResult)
+						if (Engine.ifDirectiveEvalResult)
 						{
 							// some if/elif directive was true -> change to a state that will 
 							// ignore any chars until #endif
@@ -1022,21 +999,21 @@ namespace ICSharpCode.NRefactory.CSharp
 						break;
 					case PreProcessorDirective.Define:
 						var defineSymbol = DirectiveStatement.ToString().Trim();
-						if (!Engine.ConditionalSymbols.Contains(defineSymbol))
+						if (!Engine.conditionalSymbols.Contains(defineSymbol))
 						{
-							Engine.ConditionalSymbols.Add(defineSymbol);
+							Engine.conditionalSymbols.Add(defineSymbol);
 						}
 						break;
 					case PreProcessorDirective.Undef:
 						var undefineSymbol = DirectiveStatement.ToString().Trim();
-						if (Engine.ConditionalSymbols.Contains(undefineSymbol))
+						if (Engine.conditionalSymbols.Contains(undefineSymbol))
 						{
-							Engine.ConditionalSymbols.Remove(undefineSymbol);
+							Engine.conditionalSymbols.Remove(undefineSymbol);
 						}
 						break;
 					case PreProcessorDirective.Endif:
 						// marks the end of this block
-						Engine.IfDirectiveEvalResult = false;
+						Engine.ifDirectiveEvalResult = false;
 						break;
 					case PreProcessorDirective.Region:
 					case PreProcessorDirective.Pragma:
@@ -1051,13 +1028,13 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void InitializeState()
 		{
-			if (Engine.Options.IndentPreprocessorStatements)
+			if (Engine.formattingOptions.IndentPreprocessorStatements)
 			{
 				ThisLineIndent = Parent.ThisLineIndent.Clone();
 			}
 			else
 			{
-				ThisLineIndent = new Indent(Engine.TextEditorOptions);
+				ThisLineIndent = new Indent(Engine.textEditorOptions);
 			}
 
 			NextLineIndent = Parent.NextLineIndent.Clone();
@@ -1099,9 +1076,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			}
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new PreProcessorState(this);
+			return new PreProcessorState(this, engine);
 		}
 
 		/// <summary>
@@ -1155,7 +1132,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			if (s == "false")
 				return false;
 
-			return Engine.ConditionalSymbols != null && Engine.ConditionalSymbols.Contains(s);
+			return Engine.conditionalSymbols != null && Engine.conditionalSymbols.Contains(s);
 		}
 
 		bool pp_primary(ref string s)
@@ -1352,15 +1329,15 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public PreProcessorCommentState(PreProcessorCommentState prototype)
-			: base(prototype)
+		public PreProcessorCommentState(PreProcessorCommentState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void Push(char ch)
 		{
 			base.Push(ch);
 
-			if (ch == '#' && Engine.IsLineStart)
+			if (ch == '#' && Engine.isLineStart)
 			{
 				// TODO: Return back only on #if/#elif/#else/#endif
 				// Ignore any of the other directives (especially #define/#undef)
@@ -1375,9 +1352,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = ThisLineIndent.Clone();
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new PreProcessorCommentState(this);
+			return new PreProcessorCommentState(this, engine);
 		}
 	}
 
@@ -1391,8 +1368,8 @@ namespace ICSharpCode.NRefactory.CSharp
 	public class LineCommentState : IndentState
 	{
 		/// <summary>
-		///     It's possible that this should be the DocComment state ->
-		///     Check if the first next pushed char is equal to '/'.
+		///     It's possible that this should be the DocComment state:
+		///         check if the first next pushed char is equal to '/'.
 		/// </summary>
 		public bool CheckForDocComment = true;
 
@@ -1400,8 +1377,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public LineCommentState(LineCommentState prototype)
-			: base(prototype)
+		public LineCommentState(LineCommentState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			CheckForDocComment = prototype.CheckForDocComment;
 		}
@@ -1410,7 +1387,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		{
 			base.Push(ch);
 
-			if (ch == Engine.NewLineChar)
+			if (ch == Engine.newLineChar)
 			{
 				ExitState();
 			}
@@ -1430,9 +1407,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new LineCommentState(this);
+			return new LineCommentState(this, engine);
 		}
 	}
 
@@ -1449,15 +1426,15 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public DocCommentState(DocCommentState prototype)
-			: base(prototype)
+		public DocCommentState(DocCommentState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{ }
 
 		public override void Push(char ch)
 		{
 			base.Push(ch);
 
-			if (ch == Engine.NewLineChar)
+			if (ch == Engine.newLineChar)
 			{
 				ExitState();
 			}
@@ -1469,9 +1446,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new DocCommentState(this);
+			return new DocCommentState(this, engine);
 		}
 	}
 
@@ -1498,8 +1475,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public MultiLineCommentState(MultiLineCommentState prototype)
-			: base(prototype)
+		public MultiLineCommentState(MultiLineCommentState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			IsAnyCharPushed = prototype.IsAnyCharPushed;
 		}
@@ -1508,7 +1485,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		{
 			base.Push(ch);
 
-			if (ch == '/' && Engine.PreviousChar == '*' && IsAnyCharPushed)
+			if (ch == '/' && Engine.previousChar == '*' && IsAnyCharPushed)
 			{
 				ExitState();
 			}
@@ -1525,9 +1502,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent + 1);
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new MultiLineCommentState(this);
+			return new MultiLineCommentState(this, engine);
 		}
 	}
 
@@ -1549,8 +1526,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public StringLiteralState(StringLiteralState prototype)
-			: base(prototype)
+		public StringLiteralState(StringLiteralState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			IsEscaped = prototype.IsEscaped;
 		}
@@ -1559,7 +1536,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		{
 			base.Push(ch);
 
-			if (ch == Engine.NewLineChar)
+			if (ch == Engine.newLineChar)
 			{
 				ExitState();
 			}
@@ -1577,9 +1554,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new StringLiteralState(this);
+			return new StringLiteralState(this, engine);
 		}
 	}
 
@@ -1601,8 +1578,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public VerbatimStringState(VerbatimStringState prototype)
-			: base(prototype)
+		public VerbatimStringState(VerbatimStringState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			IsEscaped = prototype.IsEscaped;
 		}
@@ -1615,7 +1592,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			{
 				ExitState();
 				// the char has been pushed to the wrong state, push it back
-				Engine.CurrentState.Push(ch);
+				Engine.currentState.Push(ch);
 			}
 
 			IsEscaped = ch == '"' && !IsEscaped;
@@ -1624,12 +1601,12 @@ namespace ICSharpCode.NRefactory.CSharp
 		public override void InitializeState()
 		{
 			ThisLineIndent = Parent.ThisLineIndent.Clone();
-			NextLineIndent = new Indent(Engine.TextEditorOptions);
+			NextLineIndent = new Indent(Engine.textEditorOptions);
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new VerbatimStringState(this);
+			return new VerbatimStringState(this, engine);
 		}
 	}
 
@@ -1651,8 +1628,8 @@ namespace ICSharpCode.NRefactory.CSharp
 			: base(engine, parent)
 		{ }
 
-		public CharacterState(CharacterState prototype)
-			: base(prototype)
+		public CharacterState(CharacterState prototype, IndentEngine engine)
+			: base(prototype, engine)
 		{
 			IsEscaped = prototype.IsEscaped;
 		}
@@ -1661,7 +1638,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		{
 			base.Push(ch);
 
-			if (ch == Engine.NewLineChar)
+			if (ch == Engine.newLineChar)
 			{
 				ExitState();
 			}
@@ -1679,9 +1656,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone()
+		public override IndentState Clone(IndentEngine engine)
 		{
-			return new CharacterState(this);
+			return new CharacterState(this, engine);
 		}
 	}
 
