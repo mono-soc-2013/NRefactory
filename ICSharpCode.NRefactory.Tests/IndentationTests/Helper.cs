@@ -28,7 +28,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 			var document = new ReadOnlyDocument(sb.ToString());
 			var options = new TextEditorOptions();
 
-			var result = new CacheIndentEngine(new IndentEngine(document, options, policy));
+			var result = new CacheIndentEngine(new CSharpIndentEngine(document, options, policy));
 			result.Update(offset);
 			return result;
 		}
@@ -41,7 +41,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 				var policy = FormattingOptionsFactory.CreateMono();
 				var document = new ReadOnlyDocument(code);
 				var options = new TextEditorOptions { IndentBlankLines = false };
-				var engine = new CacheIndentEngine(new IndentEngine(document, options, policy));
+				var engine = new CacheIndentEngine(new CSharpIndentEngine(document, options, policy));
 
 				foreach (var ch in code)
 				{

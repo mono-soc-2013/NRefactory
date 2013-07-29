@@ -208,7 +208,7 @@
     <Compile Include="IndentEngine\CacheIndentEngine.cs" />
     <Compile Include="IndentEngine\CopyPasteIndentEngine.cs" />
     <Compile Include="IndentEngine\IDocumentIndentEngine.cs" />
-    <Compile Include="IndentEngine\IndentEngine.cs" />
+    <Compile Include="IndentEngine\CSharpIndentEngine.cs" />
     <Compile Include="IndentEngine\IndentState.cs" />
     <Compile Include="IndentEngine\IStateMachineIndentEngine.cs" />
     <Compile Include="OutputVisitor\CodeDomConvertVisitor.cs" />
@@ -516,7 +516,6 @@
     <Compile Include="Refactoring\CodeActions\ConvertToInitializer\AccessPath.cs" />
     <Compile Include="Refactoring\LocalReferenceFinder.cs" />
     <Compile Include="Refactoring\CodeActions\SortUsingsAction.cs" />
-    <Compile Include="Formatter\CSharpIndentEngine.cs" />
     <Compile Include="Refactoring\CodeActions\CreateEnumValue.cs" />
     <Compile Include="Resolver\AliasTypeResolveResult.cs" />
     <Compile Include="Resolver\AliasNamespaceResolveResult.cs" />

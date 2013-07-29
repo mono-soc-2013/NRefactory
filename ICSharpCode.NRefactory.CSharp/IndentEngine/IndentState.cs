@@ -45,7 +45,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <summary>
 		///     The indentation engine using this state.
 		/// </summary>
-		public IndentEngine Engine;
+		public CSharpIndentEngine Engine;
 
 		/// <summary>
 		///     The parent state. 
@@ -57,7 +57,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <summary>
 		///     The indentation of the current line.
 		///     This is set when the state is created and will be changed to
-		///     <see cref="NextLineIndent"/> when the <see cref="IndentEngine.newLineChar"/> 
+		///     <see cref="NextLineIndent"/> when the <see cref="CSharpIndentEngine.newLineChar"/> 
 		///     is pushed.
 		/// </summary>
 		public Indent ThisLineIndent;
@@ -83,7 +83,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		///     The parent state, or null if this state doesn't have one ->
 		///         e.g. the state represents the global space.
 		/// </param>
-		protected IndentState(IndentEngine engine, IndentState parent = null)
+		protected IndentState(CSharpIndentEngine engine, IndentState parent = null)
 		{
 			Parent = parent;
 			Engine = engine;
@@ -101,7 +101,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <param name="engine">
 		///     The engine of the new state.
 		/// </param>
-		protected IndentState(IndentState prototype, IndentEngine engine)
+		protected IndentState(IndentState prototype, CSharpIndentEngine engine)
 		{
 			Engine = engine;
 			Parent = prototype.Parent != null ? prototype.Parent.Clone(engine) : null;
@@ -119,7 +119,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			return Clone(Engine);
 		}
 
-		public abstract IndentState Clone(IndentEngine engine);
+		public abstract IndentState Clone(CSharpIndentEngine engine);
 
 		#endregion
 
@@ -160,7 +160,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		/// <summary>
-		///     Changes the current state of the <see cref="IndentEngine"/> using the current
+		///     Changes the current state of the <see cref="CSharpIndentEngine"/> using the current
 		///     state as the parent for the new one.
 		/// </summary>
 		/// <typeparam name="T">
@@ -174,7 +174,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		/// <summary>
 		///     Exits this state by setting the current state of the
-		///     <see cref="IndentEngine"/> to this state's parent.
+		///     <see cref="CSharpIndentEngine"/> to this state's parent.
 		/// </summary>
 		public void ExitState()
 		{
@@ -235,7 +235,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <returns>
 		///     A new state of type <paramref name="stateType"/>.
 		/// </returns>
-		static IndentState Create(Type stateType, IndentEngine engine, IndentState parent = null)
+		static IndentState Create(Type stateType, CSharpIndentEngine engine, IndentState parent = null)
 		{
 			return (IndentState)Activator.CreateInstance(stateType, engine, parent);
 		}
@@ -255,7 +255,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <returns>
 		///     A new state of type <typeparamref name="T"/>.
 		/// </returns>
-		public static IndentState Create<T>(IndentEngine engine, IndentState parent = null)
+		public static IndentState Create<T>(CSharpIndentEngine engine, IndentState parent = null)
 			where T : IndentState
 		{
 			return Create(typeof(T), engine, parent);
@@ -283,7 +283,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <summary>
 		///     The default state, used for the global space.
 		/// </summary>
-		public static Func<IndentEngine, IndentState> Default = engine => Create<GlobalBodyState>(engine);
+		public static Func<CSharpIndentEngine, IndentState> Default = engine => Create<GlobalBodyState>(engine);
 	}
 
 	#endregion
@@ -298,18 +298,18 @@ namespace ICSharpCode.NRefactory.CSharp
 	/// </remarks>
 	public class NullState : IndentState
 	{
-		public NullState(IndentEngine engine, IndentState parent = null)
+		public NullState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public NullState(NullState prototype, IndentEngine engine)
+		public NullState(NullState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
 		public override void Push(char ch)
 		{ }
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new NullState(this, engine);
 		}
@@ -351,11 +351,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public abstract char ClosedBracket { get; }
 
-		protected BracketsBodyBaseState(IndentEngine engine, IndentState parent = null)
+		protected BracketsBodyBaseState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		protected BracketsBodyBaseState(BracketsBodyBaseState prototype, IndentEngine engine)
+		protected BracketsBodyBaseState(BracketsBodyBaseState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -423,15 +423,15 @@ namespace ICSharpCode.NRefactory.CSharp
 			get { return '\0'; }
 		}
 
-		public GlobalBodyState(IndentEngine engine, IndentState parent = null)
+		public GlobalBodyState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public GlobalBodyState(GlobalBodyState prototype, IndentEngine engine)
+		public GlobalBodyState(GlobalBodyState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new GlobalBodyState(this, engine);
 		}
@@ -476,14 +476,14 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public bool IsRightHandExpression;
 
-		public BracesBodyState(IndentEngine engine, IndentState parent = null)
+		public BracesBodyState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{
 			CurrentBody = NextBody = BracesBodyState.extractBody(Parent);
 			CurrentStatement = Statement.None;
 		}
 
-		public BracesBodyState(BracesBodyState prototype, IndentEngine engine)
+		public BracesBodyState(BracesBodyState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			CurrentBody = prototype.CurrentBody;
@@ -563,7 +563,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			AddIndentation(CurrentBody);
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new BracesBodyState(this, engine);
 		}
@@ -731,11 +731,11 @@ namespace ICSharpCode.NRefactory.CSharp
 	/// </remarks>
 	public class SwitchCaseState : BracesBodyState
 	{
-		public SwitchCaseState(IndentEngine engine, IndentState parent = null)
+		public SwitchCaseState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public SwitchCaseState(SwitchCaseState prototype, IndentEngine engine)
+		public SwitchCaseState(SwitchCaseState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -777,7 +777,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		public override void OnExit()
 		{ }
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new SwitchCaseState(this, engine);
 		}
@@ -800,11 +800,11 @@ namespace ICSharpCode.NRefactory.CSharp
 			get { return ')'; }
 		}
 
-		public ParenthesesBodyState(IndentEngine engine, IndentState parent = null)
+		public ParenthesesBodyState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public ParenthesesBodyState(ParenthesesBodyState prototype, IndentEngine engine)
+		public ParenthesesBodyState(ParenthesesBodyState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -816,7 +816,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new ParenthesesBodyState(this, engine);
 		}
@@ -839,11 +839,11 @@ namespace ICSharpCode.NRefactory.CSharp
 			get { return ']'; }
 		}
 
-		public SquareBracketsBodyState(IndentEngine engine, IndentState parent = null)
+		public SquareBracketsBodyState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public SquareBracketsBodyState(SquareBracketsBodyState prototype, IndentEngine engine)
+		public SquareBracketsBodyState(SquareBracketsBodyState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -855,7 +855,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new SquareBracketsBodyState(this, engine);
 		}
@@ -878,11 +878,11 @@ namespace ICSharpCode.NRefactory.CSharp
 			get { return '>'; }
 		}
 
-		public AngleBracketsBodyState(IndentEngine engine, IndentState parent = null)
+		public AngleBracketsBodyState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public AngleBracketsBodyState(AngleBracketsBodyState prototype, IndentEngine engine)
+		public AngleBracketsBodyState(AngleBracketsBodyState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -894,7 +894,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent);
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new AngleBracketsBodyState(this, engine);
 		}
@@ -911,7 +911,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	/// </summary>
 	/// <remarks>
 	///     Activated when the '#' char is pushed and the 
-	///     <see cref="IndentEngine.isLineStart"/> is true.
+	///     <see cref="CSharpIndentEngine.isLineStart"/> is true.
 	/// </remarks>
 	public class PreProcessorState : IndentState
 	{
@@ -926,14 +926,14 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public StringBuilder DirectiveStatement;
 
-		public PreProcessorState(IndentEngine engine, IndentState parent = null)
+		public PreProcessorState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{
 			DirectiveType = PreProcessorDirective.None;
 			DirectiveStatement = new StringBuilder();
 		}
 
-		public PreProcessorState(PreProcessorState prototype, IndentEngine engine)
+		public PreProcessorState(PreProcessorState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			DirectiveType = prototype.DirectiveType;
@@ -1078,7 +1078,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			}
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new PreProcessorState(this, engine);
 		}
@@ -1327,11 +1327,11 @@ namespace ICSharpCode.NRefactory.CSharp
 	/// </remarks>
 	public class PreProcessorCommentState : IndentState
 	{
-		public PreProcessorCommentState(IndentEngine engine, IndentState parent = null)
+		public PreProcessorCommentState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public PreProcessorCommentState(PreProcessorCommentState prototype, IndentEngine engine)
+		public PreProcessorCommentState(PreProcessorCommentState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -1354,7 +1354,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = ThisLineIndent.Clone();
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new PreProcessorCommentState(this, engine);
 		}
@@ -1375,11 +1375,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public bool CheckForDocComment = true;
 
-		public LineCommentState(IndentEngine engine, IndentState parent = null)
+		public LineCommentState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public LineCommentState(LineCommentState prototype, IndentEngine engine)
+		public LineCommentState(LineCommentState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			CheckForDocComment = prototype.CheckForDocComment;
@@ -1409,7 +1409,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new LineCommentState(this, engine);
 		}
@@ -1424,11 +1424,11 @@ namespace ICSharpCode.NRefactory.CSharp
 	/// </summary>
 	public class DocCommentState : IndentState
 	{
-		public DocCommentState(IndentEngine engine, IndentState parent = null)
+		public DocCommentState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public DocCommentState(DocCommentState prototype, IndentEngine engine)
+		public DocCommentState(DocCommentState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{ }
 
@@ -1448,7 +1448,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new DocCommentState(this, engine);
 		}
@@ -1473,11 +1473,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </remarks>
 		public bool IsAnyCharPushed;
 
-		public MultiLineCommentState(IndentEngine engine, IndentState parent = null)
+		public MultiLineCommentState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public MultiLineCommentState(MultiLineCommentState prototype, IndentEngine engine)
+		public MultiLineCommentState(MultiLineCommentState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			IsAnyCharPushed = prototype.IsAnyCharPushed;
@@ -1504,7 +1504,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent.ExtraSpaces = Math.Max(0, Engine.column - NextLineIndent.CurIndent + 1);
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new MultiLineCommentState(this, engine);
 		}
@@ -1524,11 +1524,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public bool IsEscaped;
 
-		public StringLiteralState(IndentEngine engine, IndentState parent = null)
+		public StringLiteralState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public StringLiteralState(StringLiteralState prototype, IndentEngine engine)
+		public StringLiteralState(StringLiteralState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			IsEscaped = prototype.IsEscaped;
@@ -1556,7 +1556,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new StringLiteralState(this, engine);
 		}
@@ -1576,11 +1576,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public bool IsEscaped;
 
-		public VerbatimStringState(IndentEngine engine, IndentState parent = null)
+		public VerbatimStringState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public VerbatimStringState(VerbatimStringState prototype, IndentEngine engine)
+		public VerbatimStringState(VerbatimStringState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			IsEscaped = prototype.IsEscaped;
@@ -1606,7 +1606,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = new Indent(Engine.textEditorOptions);
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new VerbatimStringState(this, engine);
 		}
@@ -1626,11 +1626,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		public bool IsEscaped;
 
-		public CharacterState(IndentEngine engine, IndentState parent = null)
+		public CharacterState(CSharpIndentEngine engine, IndentState parent = null)
 			: base(engine, parent)
 		{ }
 
-		public CharacterState(CharacterState prototype, IndentEngine engine)
+		public CharacterState(CharacterState prototype, CSharpIndentEngine engine)
 			: base(prototype, engine)
 		{
 			IsEscaped = prototype.IsEscaped;
@@ -1658,7 +1658,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			NextLineIndent = Parent.NextLineIndent.Clone();
 		}
 
-		public override IndentState Clone(IndentEngine engine)
+		public override IndentState Clone(CSharpIndentEngine engine)
 		{
 			return new CharacterState(this, engine);
 		}
