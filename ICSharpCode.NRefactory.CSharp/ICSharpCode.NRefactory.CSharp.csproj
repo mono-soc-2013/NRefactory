@@ -206,7 +206,7 @@
     <Compile Include="Formatter\CSharpFormattingOptions.cs" />
     <Compile Include="Formatter\Indent.cs" />
     <Compile Include="IndentEngine\CacheIndentEngine.cs" />
-    <Compile Include="IndentEngine\CopyPasteIndentEngine.cs" />
+    <Compile Include="IndentEngine\TextPasteIndentEngine.cs" />
     <Compile Include="IndentEngine\IDocumentIndentEngine.cs" />
     <Compile Include="IndentEngine\CSharpIndentEngine.cs" />
     <Compile Include="IndentEngine\IndentState.cs" />
