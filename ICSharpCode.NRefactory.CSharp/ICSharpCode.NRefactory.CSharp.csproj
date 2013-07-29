@@ -557,6 +557,7 @@
     <Compile Include="Refactoring\CodeIssues\EmptyGeneralCatchClauseIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\UnmatchedSizeSpecificationInArrayCreationIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\RedundantSizeSpecificationInArrayCreationIssue.cs" />
+    <Compile Include="Refactoring\CodeIssues\RedundantBaseTypeIssue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
