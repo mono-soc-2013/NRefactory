@@ -45,7 +45,7 @@ namespace ICSharpCode.NRefactory.Demo
 			document = new StringBuilderDocument();
 			policy = FormattingOptionsFactory.CreateMono();
 			options = new TextEditorOptions();
-			indentEngine = new CacheIndentEngine(new IndentEngine(options, policy), document);
+			indentEngine = new CacheIndentEngine(new IndentEngine(document, options, policy));
 		}
 
 		private void reindent()

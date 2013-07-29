@@ -1,4 +1,5 @@
-﻿//
+﻿using ICSharpCode.NRefactory.Editor;
+//
 // IndentEngine.cs
 //
 // Author:
@@ -39,7 +40,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	///     Delegates the responsibility for pushing a new char to the current 
 	///     state and changes between states depending on the pushed chars.
 	/// </remarks>
-	public class IndentEngine : IIndentEngine
+	public class IndentEngine : IStateMachineIndentEngine
 	{
 		#region Properties
 
@@ -52,6 +53,12 @@ namespace ICSharpCode.NRefactory.CSharp
 		///     Text editor options.
 		/// </summary>
 		internal readonly TextEditorOptions textEditorOptions;
+
+		/// <summary>
+		///     A readonly reference to the document that's parsed
+		///     by the <see cref="currentEngine"/>.
+		/// </summary>
+		internal readonly IDocument document;
 
 		/// <summary>
 		///     Represents the new line character.
@@ -83,6 +90,12 @@ namespace ICSharpCode.NRefactory.CSharp
 		#endregion
 
 		#region IDocumentIndentEngine
+
+		/// <inheritdoc />
+		public IDocument Document
+		{
+			get { return document; }
+		}
 
 		/// <inheritdoc />
 		public string ThisLineIndent
@@ -211,10 +224,23 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		#region Constructors
 
-		public IndentEngine(TextEditorOptions textEditorOptions, CSharpFormattingOptions formattingOptions)
+		/// <summary>
+		///     Creates a new IndentEngine instance.
+		/// </summary>
+		/// <param name="document">
+		///     An instance of <see cref="IDocument"/> which is being parsed.
+		/// </param>
+		/// <param name="formattingOptions">
+		///     C# formatting options.
+		/// </param>
+		/// <param name="textEditorOptions">
+		///    Text editor options for indentation.
+		/// </param>
+		public IndentEngine(IDocument document, TextEditorOptions textEditorOptions, CSharpFormattingOptions formattingOptions)
 		{
 			this.formattingOptions = formattingOptions;
 			this.textEditorOptions = textEditorOptions;
+			this.document = document;
 
 			this.currentState = IndentStateFactory.Default(this);
 
@@ -223,10 +249,17 @@ namespace ICSharpCode.NRefactory.CSharp
 			this.newLineChar = textEditorOptions.EolMarker[0];
 		}
 
+		/// <summary>
+		///     Creates a new IndentEngine instance from the given prototype.
+		/// </summary>
+		/// <param name="prototype">
+		///     An IndentEngine instance.
+		/// </param>
 		public IndentEngine(IndentEngine prototype)
 		{
 			this.formattingOptions = prototype.formattingOptions;
 			this.textEditorOptions = prototype.textEditorOptions;
+			this.document = prototype.document;
 
 			this.newLineChar = prototype.newLineChar;
 			this.currentState = prototype.currentState.Clone(this);
@@ -253,7 +286,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		/// <inheritdoc />
-		public IIndentEngine Clone()
+		public IDocumentIndentEngine Clone()
 		{
 			return new IndentEngine(this);
 		}
@@ -261,22 +294,6 @@ namespace ICSharpCode.NRefactory.CSharp
 		#endregion
 
 		#region Methods
-
-		/// <inheritdoc />
-		public void Reset()
-		{
-			currentState = IndentStateFactory.Default(this);
-			conditionalSymbols.Clear();
-			ifDirectiveEvalResult = false;
-
-			offset = 0;
-			line = 1;
-			column = 1;
-			isLineStart = true;
-			currentChar = '\0';
-			previousChar = '\0';
-			currentIndent.Length = 0;
-		}
 
 		/// <inheritdoc />
 		public void Push(char ch)
@@ -334,6 +351,31 @@ namespace ICSharpCode.NRefactory.CSharp
 				isLineStart = true;
 				column = 1;
 				line++;
+			}
+		}
+
+		/// <inheritdoc />
+		public void Reset()
+		{
+			currentState = IndentStateFactory.Default(this);
+			conditionalSymbols.Clear();
+			ifDirectiveEvalResult = false;
+
+			offset = 0;
+			line = 1;
+			column = 1;
+			isLineStart = true;
+			currentChar = '\0';
+			previousChar = '\0';
+			currentIndent.Length = 0;
+		}
+
+		/// <inheritdoc />
+		public void Update(int offset)
+		{
+			while (Offset < offset)
+			{
+				Push(Document.GetCharAt(Offset));
 			}
 		}
 

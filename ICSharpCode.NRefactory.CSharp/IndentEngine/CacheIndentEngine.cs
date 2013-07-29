@@ -29,7 +29,7 @@ using System;
 namespace ICSharpCode.NRefactory.CSharp
 {
 	/// <summary>
-	///     Represents a decorator of an IIndentEngine instance that provides
+	///     Represents a decorator of an IDocumentIndentEngine instance that provides
 	///     logic for reseting and updating the engine on text changed events.
 	/// </summary>
 	/// <remarks>
@@ -61,13 +61,13 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <remarks>
 		///     Should be equal to the last engine in <see cref="cachedEngines"/>.
 		/// </remarks>
-		IIndentEngine currentEngine;
+		IDocumentIndentEngine currentEngine;
 
 		/// <summary>
 		///     List of cached engines sorted ascending by 
 		///     <see cref="IIndentEngine.Offset"/>.
 		/// </summary>
-		IIndentEngine[] cachedEngines;
+		IDocumentIndentEngine[] cachedEngines;
 
 		/// <summary>
 		///     The number of engines that have been cached so far.
@@ -77,21 +77,15 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </remarks>
 		int cachedEnginesCount;
 
-		/// <summary>
-		///     A readonly reference to the document that's parsed
-		///     by the <see cref="currentEngine"/>.
-		/// </summary>
-		readonly IDocument document;
-
 		#endregion
 
 		#region Constructors
 
 		/// <summary>
-		///     Creates a new DocumentStateTracker instance.
+		///     Creates a new CacheIndentEngine instance.
 		/// </summary>
 		/// <param name="decoratedEngine">
-		///     An instance of <see cref="IIndentEngine"/> to which the
+		///     An instance of <see cref="IDocumentIndentEngine"/> to which the
 		///     logic for indentation will be delegated.
 		/// </param>
 		/// <param name="document">
@@ -100,16 +94,15 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <param name="cacheRate">
 		///     The number of chars between caching.
 		/// </param>
-		public CacheIndentEngine(IIndentEngine decoratedEngine, IDocument document, int cacheRate = 2000)
+		public CacheIndentEngine(IDocumentIndentEngine decoratedEngine, int cacheRate = 2000)
 		{
-			this.cachedEngines = new IIndentEngine[cacheCapacity];
+			this.cachedEngines = new IDocumentIndentEngine[cacheCapacity];
 
 			this.cachedEngines[0] = decoratedEngine.Clone();
 			this.currentEngine = decoratedEngine;
-			this.document = document;
 			this.cacheRate = cacheRate;
 
-			this.document.TextChanged += textChanged;
+			Document.TextChanged += textChanged;
 		}
 
 		#endregion
@@ -121,7 +114,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		void textChanged(object sender, TextChangeEventArgs args)
 		{
-			UpdateEngine();
+			Update(args.Offset + args.InsertionLength + args.RemovalLength);
 		}
 
 		/// <summary>
@@ -146,51 +139,6 @@ namespace ICSharpCode.NRefactory.CSharp
 			cachedEngines[engineIndex] = currentEngine.Clone();
 		}
 
-		/// <summary>
-		///     Updates the engine to the end of <see cref="CacheIndentEngine.document"/>.
-		/// </summary>
-		public void UpdateEngine()
-		{
-			UpdateEngine(document.TextLength);
-		}
-
-		/// <summary>
-		///     Updates the engine to the given <paramref name="offset"/>.
-		/// </summary>
-		/// <param name="offset">
-		///     The offset to which the engine should be updated.
-		/// </param>
-		/// <remarks>
-		///     If the <paramref name="offset"/> is negative, the engine will
-		///     update to: document.TextLength + (offset % document.TextLength+1)
-		///     Otherwise it will update to: offset % document.TextLength+1
-		/// </remarks>
-		public void UpdateEngine(int offset)
-		{
-			// map the given offset to the [0, document.TextLength] interval
-			// using modulo arithmetics
-			offset %= document.TextLength + 1;
-			if (offset < 0)
-			{
-				offset += document.TextLength + 1;
-			}
-
-			// check if the engine has to be updated to some previous offset
-			if (currentEngine.Offset > offset)
-			{
-				// replace the currentEngine with the first one whose offset
-				// is less then the given <paramref name="offset"/>
-				cachedEnginesCount = offset / cacheRate;
-				currentEngine = cachedEngines[cachedEnginesCount].Clone();
-			}
-			
-			// update the engine to the given offset
-			while (currentEngine.Offset < offset)
-			{
-				Push(document.GetCharAt(currentEngine.Offset));
-			}
-		}
-
 		#endregion
 
 		#region IDocumentIndentEngine
@@ -198,7 +146,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <inheritdoc />
 		public IDocument Document
 		{
-			get { return document; }
+			get { return currentEngine.Document; }
 		}
 
 		/// <inheritdoc />
@@ -254,6 +202,35 @@ namespace ICSharpCode.NRefactory.CSharp
 			currentEngine = cachedEngines[cachedEnginesCount = 0];
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		///     If the <paramref name="offset"/> is negative, the engine will
+		///     update to: document.TextLength + (offset % document.TextLength+1)
+		///     Otherwise it will update to: offset % document.TextLength+1
+		/// </remarks>
+		public void Update(int offset)
+		{
+			// map the given offset to the [0, document.TextLength] interval
+			// using modulo arithmetics
+			offset %= Document.TextLength + 1;
+			if (offset < 0)
+			{
+				offset += Document.TextLength + 1;
+			}
+
+			// check if the engine has to be updated to some previous offset
+			if (currentEngine.Offset > offset)
+			{
+				// replace the currentEngine with the first one whose offset
+				// is less then the given <paramref name="offset"/>
+				cachedEnginesCount = offset / cacheRate;
+				currentEngine = cachedEngines[cachedEnginesCount].Clone();
+			}
+
+			// update the engine to the given offset
+			currentEngine.Update(offset);
+		}
+
 		#endregion
 
 		#region IClonable
@@ -261,12 +238,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <inheritdoc />
 		public IDocumentIndentEngine Clone()
 		{
-			return new CacheIndentEngine(currentEngine, document, cacheRate);
-		}
-
-		IIndentEngine IIndentEngine.Clone()
-		{
-			return Clone();
+			return new CacheIndentEngine(currentEngine, cacheRate);
 		}
 
 		object ICloneable.Clone()
@@ -280,7 +252,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public void Dispose()
 		{
-			document.TextChanged -= textChanged;
+			Document.TextChanged -= textChanged;
 		}
 
 		#endregion

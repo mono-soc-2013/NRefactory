@@ -2,7 +2,6 @@
 using ICSharpCode.NRefactory.Editor;
 using NUnit.Framework;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace ICSharpCode.NRefactory.IndentationTests
@@ -29,8 +28,8 @@ namespace ICSharpCode.NRefactory.IndentationTests
 			var document = new ReadOnlyDocument(sb.ToString());
 			var options = new TextEditorOptions();
 
-			var result = new CacheIndentEngine(new IndentEngine(options, policy), document);
-			result.UpdateEngine(offset);
+			var result = new CacheIndentEngine(new IndentEngine(document, options, policy));
+			result.Update(offset);
 			return result;
 		}
 
@@ -42,7 +41,7 @@ namespace ICSharpCode.NRefactory.IndentationTests
 				var policy = FormattingOptionsFactory.CreateMono();
 				var document = new ReadOnlyDocument(code);
 				var options = new TextEditorOptions { IndentBlankLines = false };
-				var engine = new CacheIndentEngine(new IndentEngine(options, policy), document);
+				var engine = new CacheIndentEngine(new IndentEngine(document, options, policy));
 
 				foreach (var ch in code)
 				{

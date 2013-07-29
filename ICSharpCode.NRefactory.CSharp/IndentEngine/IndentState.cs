@@ -341,6 +341,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			// TODO: Since the '<' char is also used as the 'less-than' operator,
 			// until the logic for distinguishing this two cases is implemented
 			// this state must not define this next transition.
+			// FIX: Ignore this bracket completely or maybe just check if we're not in a right hand expression? 
 			// { '<', state => state.ChangeState<AngleBracketsBody>() }
 		};
 
@@ -1028,6 +1029,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void InitializeState()
 		{
+			// OPTION: IndentPreprocessorStatements
 			if (Engine.formattingOptions.IndentPreprocessorStatements)
 			{
 				ThisLineIndent = Parent.ThisLineIndent.Clone();
@@ -1042,9 +1044,9 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public override void CheckKeyword(string keyword)
 		{
+			// check if the directive type has already been set
 			if (DirectiveType != PreProcessorDirective.None)
 			{
-				// the directive type has already been set
 				return;
 			}
 
@@ -1068,9 +1070,9 @@ namespace ICSharpCode.NRefactory.CSharp
 			{
 				DirectiveType = preProcessorDirectives[keyword];
 
+				// adjust the indentation for the region/endregion directives
 				if (DirectiveType == PreProcessorDirective.Region)
 				{
-					// adjust the indentation for the region/endregion directives
 					ThisLineIndent = Parent.NextLineIndent.Clone();
 				}
 			}

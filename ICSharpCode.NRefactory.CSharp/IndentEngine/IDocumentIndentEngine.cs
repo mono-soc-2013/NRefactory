@@ -24,15 +24,68 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using ICSharpCode.NRefactory.Editor;
+using System;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
-	public interface IDocumentIndentEngine : IIndentEngine
+	public interface IDocumentIndentEngine : ICloneable
 	{
 		/// <summary>
 		///     A reference to the document that's parsed by the engine.
 		/// </summary>
 		IDocument Document { get; }
+
+		/// <summary>
+		///     The indentation string of the current line.
+		/// </summary>
+		string ThisLineIndent { get; }
+
+		/// <summary>
+		///     The indentation string of the next line.
+		/// </summary>
+		string NextLineIndent { get; }
+
+		/// <summary>
+		///     The indent string on the beginning of the current line.
+		/// </summary>
+		string CurrentIndent { get; }
+
+		/// <summary>
+		///     True if the current line needs to be reindented.
+		/// </summary>
+		bool NeedsReindent { get; }
+
+		/// <summary>
+		///     The current offset of the engine.
+		/// </summary>
+		int Offset { get; }
+
+		/// <summary>
+		///     The current location of the engine.
+		/// </summary>
+		TextLocation Location { get; }
+
+		/// <summary>
+		///     Pushes a new char into the engine which calculates the new
+		///     indentation levels.
+		/// </summary>
+		/// <param name="ch">
+		///     A new character.
+		/// </param>
+		void Push(char ch);
+
+		/// <summary>
+		///     Resets the engine.
+		/// </summary>
+		void Reset();
+
+		/// <summary>
+		///     Updates the engine to the given offset
+		/// </summary>
+		/// <param name="offset">
+		///     Valid offset in <see cref="Document"/>.
+		/// </param>
+		void Update(int offset);
 
 		/// <summary>
 		///     Clones the engine and preserves the current state.
