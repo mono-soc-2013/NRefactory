@@ -83,7 +83,7 @@ namespace resharper_test
 		}
 	}
 
-	public partial class Foo: baseClass,
+	public partial class Foo: baseClass
 	{
 	}
 	public partial class Foo 
@@ -142,10 +142,10 @@ namespace resharper_test
 		}
 	}
 
-	public partial class Foo: 
+	public partial class Foo 
 	{
 	}
-	public partial class Foo: 
+	public partial class Foo 
 	{
 	}
 }

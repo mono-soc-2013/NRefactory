@@ -113,7 +113,18 @@ namespace ICSharpCode.NRefactory.CSharp.Refactoring
 				}
 				foreach (var node in redundantBase) {
 					AddIssue(node, ctx.TranslateString("Remove redundant base specification"), Script =>
-							Script.Remove(node)
+					{
+						if (typeDeclaration.GetCSharpNodeBefore(node).ToString().Equals(":")) {
+							if (node.GetNextNode().Role != Roles.BaseType) {
+								Script.Remove(typeDeclaration.GetCSharpNodeBefore(node));
+							}
+						}
+						if (typeDeclaration.GetCSharpNodeBefore(node).ToString().Equals(",")) {
+							Script.Remove(typeDeclaration.GetCSharpNodeBefore(node));
+						}
+						Script.Remove(node);
+
+					}
 					);
 				}
 			}
