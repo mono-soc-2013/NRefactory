@@ -552,6 +552,8 @@
     <Compile Include="Refactoring\CodeIssues\ReplaceWithIsOperatorIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\ConvertToStaticTypeIssue.cs" />
     <Compile Include="Refactoring\CodeActions\OverrideVirtualMethodAction.cs" />
+    <Compile Include="Refactoring\CodeIssues\SameGuardConditionExpressionInIfelseBranchesIssue.cs" />
+    <Compile Include="Refactoring\CodeIssues\ConvertIfStatementToReturnStatementIssue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
