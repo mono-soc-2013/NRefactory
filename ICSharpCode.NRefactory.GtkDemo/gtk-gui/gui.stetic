@@ -128,18 +128,6 @@
           </packing>
         </child>
         <child>
-          <widget class="Gtk.Label" id="label4">
-            <property name="MemberName" />
-            <property name="LabelProp" translatable="yes">&lt;span foreground="red" size="smaller"&gt;This demo does NOT support inserting or deleting of chars. Please write only at the end of the textview.&lt;/span&gt;</property>
-            <property name="UseMarkup">True</property>
-          </widget>
-          <packing>
-            <property name="Position">1</property>
-            <property name="AutoSize">False</property>
-            <property name="Expand">False</property>
-          </packing>
-        </child>
-        <child>
           <widget class="Gtk.HBox" id="hbox1">
             <property name="MemberName" />
             <property name="Spacing">6</property>
@@ -148,24 +136,13 @@
                 <property name="MemberName" />
                 <property name="Spacing">6</property>
                 <child>
-                  <widget class="Gtk.Label" id="label1">
-                    <property name="MemberName" />
-                    <property name="Xalign">0</property>
-                    <property name="LabelProp" translatable="yes">Current state: </property>
-                  </widget>
-                  <packing>
-                    <property name="Position">0</property>
-                    <property name="AutoSize">False</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="Gtk.Label" id="label2">
                     <property name="MemberName" />
                     <property name="Xalign">0</property>
                     <property name="LabelProp" translatable="yes">This line indent: </property>
                   </widget>
                   <packing>
-                    <property name="Position">1</property>
+                    <property name="Position">0</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -176,7 +153,7 @@
                     <property name="LabelProp" translatable="yes">Next line indent: </property>
                   </widget>
                   <packing>
-                    <property name="Position">2</property>
+                    <property name="Position">1</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -194,25 +171,13 @@
                 <property name="MemberName" />
                 <property name="Spacing">6</property>
                 <child>
-                  <widget class="Gtk.Label" id="lblCurrentState">
-                    <property name="MemberName" />
-                    <property name="Xalign">0</property>
-                    <property name="LabelProp" translatable="yes">GlobalBody</property>
-                    <property name="UseMarkup">True</property>
-                  </widget>
-                  <packing>
-                    <property name="Position">0</property>
-                    <property name="AutoSize">False</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="Gtk.Label" id="lblThisLineIndent">
                     <property name="MemberName" />
                     <property name="Xalign">0</property>
                     <property name="LabelProp" translatable="yes">0</property>
                   </widget>
                   <packing>
-                    <property name="Position">1</property>
+                    <property name="Position">0</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -223,7 +188,7 @@
                     <property name="LabelProp" translatable="yes">0</property>
                   </widget>
                   <packing>
-                    <property name="Position">2</property>
+                    <property name="Position">1</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -241,24 +206,13 @@
                 <property name="MemberName" />
                 <property name="Spacing">6</property>
                 <child>
-                  <widget class="Gtk.Label" id="label7">
-                    <property name="MemberName" />
-                    <property name="Xalign">0</property>
-                    <property name="LabelProp" translatable="yes">Is line start: </property>
-                  </widget>
-                  <packing>
-                    <property name="Position">0</property>
-                    <property name="AutoSize">False</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="Gtk.Label" id="label8">
                     <property name="MemberName" />
                     <property name="Xalign">0</property>
                     <property name="LabelProp" translatable="yes">Needs reindent: </property>
                   </widget>
                   <packing>
-                    <property name="Position">1</property>
+                    <property name="Position">0</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -269,7 +223,7 @@
                     <property name="LabelProp" translatable="yes">Current indent: </property>
                   </widget>
                   <packing>
-                    <property name="Position">2</property>
+                    <property name="Position">1</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -287,24 +241,13 @@
                 <property name="MemberName" />
                 <property name="Spacing">6</property>
                 <child>
-                  <widget class="Gtk.Label" id="lblIsLineStart">
-                    <property name="MemberName" />
-                    <property name="Xalign">0</property>
-                    <property name="LabelProp" translatable="yes">Yes</property>
-                  </widget>
-                  <packing>
-                    <property name="Position">0</property>
-                    <property name="AutoSize">False</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="Gtk.Label" id="lblNeedsReindent">
                     <property name="MemberName" />
                     <property name="Xalign">0</property>
                     <property name="LabelProp" translatable="yes">False</property>
                   </widget>
                   <packing>
-                    <property name="Position">1</property>
+                    <property name="Position">0</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -315,7 +258,7 @@
                     <property name="LabelProp" translatable="yes">0</property>
                   </widget>
                   <packing>
-                    <property name="Position">2</property>
+                    <property name="Position">1</property>
                     <property name="AutoSize">False</property>
                   </packing>
                 </child>
@@ -367,7 +310,7 @@
             </child>
           </widget>
           <packing>
-            <property name="Position">2</property>
+            <property name="Position">1</property>
             <property name="AutoSize">True</property>
             <property name="Expand">False</property>
             <property name="Fill">False</property>
