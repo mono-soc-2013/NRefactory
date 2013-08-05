@@ -36,7 +36,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	///     The decorator is based on periodical caching of the engine's state and
 	///     delegating all logic behind indentation to the currently active engine.
 	/// </remarks>
-	public class CacheIndentEngine : IDisposable, IStateMachineIndentEngine
+	public class CacheIndentEngine : IStateMachineIndentEngine
 	{
 		#region Properties
 
@@ -98,21 +98,11 @@ namespace ICSharpCode.NRefactory.CSharp
 			this.cachedEngines[0] = decoratedEngine.Clone();
 			this.currentEngine = this.cachedEngines[0];
 			this.cacheRate = cacheRate;
-
-			Document.TextChanged += textChanged;
 		}
 
 		#endregion
 
 		#region Methods
-
-		/// <summary>
-		///     Handles the TextChanged event of <see cref="IDocumentIndentEngine.Document"/>.
-		/// </summary>
-		void textChanged(object sender, TextChangeEventArgs args)
-		{
-			Update(args.Offset + args.InsertionLength + args.RemovalLength);
-		}
 
 		/// <summary>
 		///     Performs caching of the <see cref="CacheIndentEngine.currentEngine"/>.
@@ -247,15 +237,6 @@ namespace ICSharpCode.NRefactory.CSharp
 		object ICloneable.Clone()
 		{
 			return Clone();
-		}
-
-		#endregion
-
-		#region IDisposable
-
-		public void Dispose()
-		{
-			Document.TextChanged -= textChanged;
 		}
 
 		#endregion
