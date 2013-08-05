@@ -1,5 +1,4 @@
-﻿using ICSharpCode.NRefactory.Editor;
-//
+﻿//
 // CSharpIndentEngine.cs
 //
 // Author:
@@ -24,6 +23,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using ICSharpCode.NRefactory.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +56,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		/// <summary>
 		///     A readonly reference to the document that's parsed
-		///     by the <see cref="currentEngine"/>.
+		///     by the engine.
 		/// </summary>
 		internal readonly IDocument document;
 
@@ -71,7 +71,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		internal IndentState currentState;
 
 		/// <summary>
-		///     Stores the conditional symbols of the #define directives.
+		///     Stores conditional symbols of #define directives.
 		/// </summary>
 		internal HashSet<string> conditionalSymbols;
 
@@ -220,6 +220,16 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		internal StringBuilder currentIndent = new StringBuilder();
 
+		/// <summary>
+		///     True if this line began in <see cref="VerbatimStringState"/>.
+		/// </summary>
+		internal bool lineBeganInsideVerbatimString = false;
+
+		/// <summary>
+		///     True if this line began in <see cref="MultiLineCommentState"/>.
+		/// </summary>
+		internal bool lineBeganInsideMultiLineComment = false;
+
 		#endregion
 
 		#region Constructors
@@ -272,8 +282,10 @@ namespace ICSharpCode.NRefactory.CSharp
 			this.column = prototype.column;
 			this.isLineStart = prototype.isLineStart;
 			this.currentChar = prototype.currentChar;
-			this.previousChar = prototype.previousChar; 
+			this.previousChar = prototype.previousChar;
 			this.currentIndent = new StringBuilder(prototype.CurrentIndent.ToString());
+			this.lineBeganInsideMultiLineComment = prototype.lineBeganInsideMultiLineComment;
+			this.lineBeganInsideVerbatimString = prototype.lineBeganInsideVerbatimString;
 		}
 
 		#endregion
@@ -286,7 +298,12 @@ namespace ICSharpCode.NRefactory.CSharp
 		}
 
 		/// <inheritdoc />
-		public IDocumentIndentEngine Clone()
+		IDocumentIndentEngine IDocumentIndentEngine.Clone()
+		{
+			return Clone();
+		}
+
+		public IStateMachineIndentEngine Clone()
 		{
 			return new CSharpIndentEngine(this);
 		}
@@ -351,6 +368,9 @@ namespace ICSharpCode.NRefactory.CSharp
 				isLineStart = true;
 				column = 1;
 				line++;
+
+				lineBeganInsideMultiLineComment = IsInsideMultiLineComment;
+				lineBeganInsideVerbatimString = IsInsideVerbatimString;
 			}
 		}
 
@@ -445,12 +465,12 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public bool LineBeganInsideVerbatimString
 		{
-			get { throw new NotImplementedException(); }
+			get { return lineBeganInsideVerbatimString; }
 		}
 
 		public bool LineBeganInsideMultiLineComment
 		{
-			get { throw new NotImplementedException(); }
+			get { return lineBeganInsideMultiLineComment; }
 		}
 
 		#endregion
