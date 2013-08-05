@@ -558,6 +558,8 @@
     <Compile Include="Refactoring\CodeIssues\UnmatchedSizeSpecificationInArrayCreationIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\RedundantSizeSpecificationInArrayCreationIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\RedundantBaseTypeIssue.cs" />
+    <Compile Include="Refactoring\CodeIssues\RedundantBlockInDifferentBranchesIssue.cs" />
+    <Compile Include="Refactoring\CodeIssues\RedundantExplicitArrayCreationIssue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">

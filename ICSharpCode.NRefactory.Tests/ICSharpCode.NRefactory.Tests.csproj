@@ -434,6 +434,8 @@
     <Compile Include="CSharp\CodeIssues\RedundantExplicitSizeSpeicificationInArrayCreationTests.cs" />
     <Compile Include="CSharp\CodeIssues\UnmatchedSizeSpeicificationInArrayCreationTests.cs" />
     <Compile Include="CSharp\CodeIssues\RedundantBaseTypeTests.cs" />
+    <Compile Include="CSharp\CodeIssues\RedundantBlockInDifferentBranchesTests.cs" />
+    <Compile Include="CSharp\CodeIssues\RedundantExplicitArrayCreationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\cecil\Mono.Cecil.csproj">
