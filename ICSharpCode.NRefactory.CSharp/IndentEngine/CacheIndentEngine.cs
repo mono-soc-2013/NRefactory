@@ -36,7 +36,7 @@ namespace ICSharpCode.NRefactory.CSharp
 	///     The decorator is based on periodical caching of the engine's state and
 	///     delegating all logic behind indentation to the currently active engine.
 	/// </remarks>
-	public class CacheIndentEngine : IDisposable, IDocumentIndentEngine
+	public class CacheIndentEngine : IDisposable, IStateMachineIndentEngine
 	{
 		#region Properties
 
@@ -61,13 +61,13 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// <remarks>
 		///     Should be equal to the last engine in <see cref="cachedEngines"/>.
 		/// </remarks>
-		IDocumentIndentEngine currentEngine;
+		IStateMachineIndentEngine currentEngine;
 
 		/// <summary>
 		///     List of cached engines sorted ascending by 
-		///     <see cref="IIndentEngine.Offset"/>.
+		///     <see cref="IDocumentIndentEngine.Offset"/>.
 		/// </summary>
-		IDocumentIndentEngine[] cachedEngines;
+		IStateMachineIndentEngine[] cachedEngines;
 
 		/// <summary>
 		///     The number of engines that have been cached so far.
@@ -88,18 +88,15 @@ namespace ICSharpCode.NRefactory.CSharp
 		///     An instance of <see cref="IDocumentIndentEngine"/> to which the
 		///     logic for indentation will be delegated.
 		/// </param>
-		/// <param name="document">
-		///     An instance of <see cref="IDocument"/> which is being parsed.
-		/// </param>
 		/// <param name="cacheRate">
 		///     The number of chars between caching.
 		/// </param>
-		public CacheIndentEngine(IDocumentIndentEngine decoratedEngine, int cacheRate = 2000)
+		public CacheIndentEngine(IStateMachineIndentEngine decoratedEngine, int cacheRate = 2000)
 		{
-			this.cachedEngines = new IDocumentIndentEngine[cacheCapacity];
+			this.cachedEngines = new IStateMachineIndentEngine[cacheCapacity];
 
 			this.cachedEngines[0] = decoratedEngine.Clone();
-			this.currentEngine = decoratedEngine;
+			this.currentEngine = this.cachedEngines[0];
 			this.cacheRate = cacheRate;
 
 			Document.TextChanged += textChanged;
@@ -110,7 +107,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		#region Methods
 
 		/// <summary>
-		///     Handles the TextChanged event of <see cref="CacheIndentEngine.document"/>.
+		///     Handles the TextChanged event of <see cref="IDocumentIndentEngine.Document"/>.
 		/// </summary>
 		void textChanged(object sender, TextChangeEventArgs args)
 		{
@@ -236,9 +233,15 @@ namespace ICSharpCode.NRefactory.CSharp
 		#region IClonable
 
 		/// <inheritdoc />
-		public IDocumentIndentEngine Clone()
+		public IStateMachineIndentEngine Clone()
 		{
 			return new CacheIndentEngine(currentEngine, cacheRate);
+		}
+
+		/// <inheritdoc />
+		IDocumentIndentEngine IDocumentIndentEngine.Clone()
+		{
+			return Clone();
 		}
 
 		object ICloneable.Clone()
@@ -253,6 +256,80 @@ namespace ICSharpCode.NRefactory.CSharp
 		public void Dispose()
 		{
 			Document.TextChanged -= textChanged;
+		}
+
+		#endregion
+
+		#region IStateMachineIndentEngine
+
+		public bool IsInsidePreprocessorDirective
+		{
+			get { return currentEngine.IsInsidePreprocessorDirective; }
+		}
+
+		public bool IsInsidePreprocessorComment
+		{
+			get { return currentEngine.IsInsidePreprocessorComment; }
+		}
+
+		public bool IsInsideStringLiteral
+		{
+			get { return currentEngine.IsInsideStringLiteral; }
+		}
+
+		public bool IsInsideVerbatimString
+		{
+			get { return currentEngine.IsInsideVerbatimString; }
+		}
+
+		public bool IsInsideCharacter
+		{
+			get { return currentEngine.IsInsideCharacter; }
+		}
+
+		public bool IsInsideString
+		{
+			get { return currentEngine.IsInsideString; }
+		}
+
+		public bool IsInsideLineComment
+		{
+			get { return currentEngine.IsInsideLineComment; }
+		}
+
+		public bool IsInsideMultiLineComment
+		{
+			get { return currentEngine.IsInsideMultiLineComment; }
+		}
+
+		public bool IsInsideDocLineComment
+		{
+			get { return currentEngine.IsInsideDocLineComment; }
+		}
+
+		public bool IsInsideComment
+		{
+			get { return currentEngine.IsInsideComment; }
+		}
+
+		public bool IsInsideOrdinaryComment
+		{
+			get { return currentEngine.IsInsideOrdinaryComment; }
+		}
+
+		public bool IsInsideOrdinaryCommentOrString
+		{
+			get { return currentEngine.IsInsideOrdinaryCommentOrString; }
+		}
+
+		public bool LineBeganInsideVerbatimString
+		{
+			get { return currentEngine.LineBeganInsideVerbatimString; }
+		}
+
+		public bool LineBeganInsideMultiLineComment
+		{
+			get { return currentEngine.LineBeganInsideMultiLineComment; }
 		}
 
 		#endregion
