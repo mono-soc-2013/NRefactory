@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
@@ -45,6 +46,11 @@ namespace ICSharpCode.NRefactory.CSharp
 		/// </summary>
 		IStateMachineIndentEngine engine;
 
+		/// <summary>
+		///     Text editor options.
+		/// </summary>
+		internal readonly TextEditorOptions textEditorOptions;
+
 		#endregion
 
 		#region Constructors
@@ -56,9 +62,13 @@ namespace ICSharpCode.NRefactory.CSharp
 		///     An instance of <see cref="IStateMachineIndentEngine"/> to which the
 		///     logic for indentation will be delegated.
 		/// </param>
-		public TextPasteIndentEngine(IStateMachineIndentEngine decoratedEngine)
+		/// <param name="textEditorOptions">
+		///    Text editor options for indentation.
+		/// </param>
+		public TextPasteIndentEngine(IStateMachineIndentEngine decoratedEngine, TextEditorOptions textEditorOptions)
 		{
 			this.engine = decoratedEngine;
+			this.textEditorOptions = textEditorOptions;
 		}
 
 		#endregion
@@ -71,26 +81,61 @@ namespace ICSharpCode.NRefactory.CSharp
 			if (copyData != null && copyData.Length == 1)
 			{
 				var strategy = TextPasteUtils.Strategies[(TextPasteUtils.PasteStrategy)copyData[0]];
-				text = strategy.ConvertFrom(text);
+				text = strategy.Decode(text);
 			}
 
 			engine.Update(offset);
 
 			if (engine.IsInsideStringLiteral)
 			{
-				return TextPasteUtils.Strategies[TextPasteUtils.PasteStrategy.StringLiteral].CovertTo(text);
+				return TextPasteUtils.Strategies[TextPasteUtils.PasteStrategy.StringLiteral].Encode(text);
 			}
 			else if (engine.IsInsideVerbatimString)
 			{
-				return TextPasteUtils.Strategies[TextPasteUtils.PasteStrategy.VerbatimString].CovertTo(text);
+				return TextPasteUtils.Strategies[TextPasteUtils.PasteStrategy.VerbatimString].Encode(text);
 			}
 
-			return text;
+			StringBuilder result = new StringBuilder();
+			StringBuilder lineBuf = new StringBuilder();
+			char newLineChar = '\0';
+
+			foreach (var ch in text)
+			{
+				if (new[] { '\r', '\n' }.Contains(ch))
+				{
+					// the text can be copied from another text editor which has
+					// a different EOL, so we pick the first char in { '\r', '\n' }
+					// we encounter and use it as the new-line char
+					if (newLineChar == '\0')
+					{
+						newLineChar = ch;
+					}
+
+					if (ch == newLineChar)
+					{
+						result.Append(engine.ThisLineIndent +
+									  lineBuf.ToString().TrimStart(' ', '\t') +
+									  textEditorOptions.EolMarker);
+						lineBuf.Length = 0;
+					}
+				}
+				else
+				{
+					lineBuf.Append(ch);
+				}
+
+				engine.Push(ch);
+			}
+
+			engine.Update(offset);
+			return result.ToString();
 		}
 
 		/// <inheritdoc />
 		byte[] ITextPasteHandler.GetCopyData(ISegment segment)
 		{
+			engine.Update(segment.Offset);
+
 			if (engine.IsInsideStringLiteral)
 			{
 				return new[] { (byte)TextPasteUtils.PasteStrategy.StringLiteral };
@@ -173,7 +218,7 @@ namespace ICSharpCode.NRefactory.CSharp
 
 		public IDocumentIndentEngine Clone()
 		{
-			return new TextPasteIndentEngine(engine);
+			return new TextPasteIndentEngine(engine, textEditorOptions);
 		}
 
 		object ICloneable.Clone()
@@ -218,7 +263,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			/// <returns>
 			///     Formatted text.
 			/// </returns>
-			string ConvertFrom(string text);
+			string Encode(string text);
 
 			/// <summary>
 			///     Converts text formatted according with this strategy rules
@@ -230,7 +275,7 @@ namespace ICSharpCode.NRefactory.CSharp
 			/// <returns>
 			///     Original form of the given formatted text.
 			/// </returns>
-			string CovertTo(string text);
+			string Decode(string text);
 
 			/// <summary>
 			///     Type of this strategy.
@@ -258,7 +303,7 @@ namespace ICSharpCode.NRefactory.CSharp
 				strategies = Assembly.GetExecutingAssembly()
 					.GetTypes()
 					.Where(t => t.IsSubclassOf(typeof(IPasteStrategy)))
-					.Select(t => (IPasteStrategy)t.GetProperty("Instance"))
+					.Select(t => (IPasteStrategy)t.GetProperty("Instance", BindingFlags.Static))
 					.ToDictionary(s => s.Type);
 			}
 
@@ -306,13 +351,13 @@ namespace ICSharpCode.NRefactory.CSharp
 				#endregion
 
 				/// <inheritdoc />
-				public string ConvertFrom(string text)
+				public string Encode(string text)
 				{
 					return text;
 				}
 
 				/// <inheritdoc />
-				public string CovertTo(string text)
+				public string Decode(string text)
 				{
 					return text;
 				}
@@ -345,16 +390,54 @@ namespace ICSharpCode.NRefactory.CSharp
 
 				#endregion
 
-				/// <inheritdoc />
-				public string ConvertFrom(string text)
+				Dictionary<char, IEnumerable<char>> encodeReplace = new Dictionary<char, IEnumerable<char>>
 				{
-					throw new NotImplementedException();
+					{'\"', "\\\""},
+					{'\\', "\\\\"},
+					{'\n', "\\n"},
+					{'\r', "\\r"},
+					{'\t', "\\t"},
+				};
+
+				Dictionary<char, char> decodeReplace = new Dictionary<char, char>
+				{
+					{'"', '"'},
+					{'\\', '\\'},
+					{'n', '\n'},
+					{'r', '\r'},
+					{'t', '\t'},
+				};
+
+				/// <inheritdoc />
+				public string Encode(string text)
+				{
+					return string.Concat(text.SelectMany(c => encodeReplace.ContainsKey(c) ? encodeReplace[c] : new[] { c }));
 				}
 
 				/// <inheritdoc />
-				public string CovertTo(string text)
+				public string Decode(string text)
 				{
-					throw new NotImplementedException();
+					var result = new StringBuilder();
+					bool isEscaped = false;
+
+					foreach (var ch in text)
+					{
+						if (isEscaped)
+						{
+							if (decodeReplace.ContainsKey(ch))
+							{
+								result.Append(decodeReplace[ch]);
+							}
+						}
+						else
+						{
+							result.Append(ch);
+						}
+
+						isEscaped = !isEscaped && ch == '\\';
+					}
+
+					return result.ToString();
 				}
 
 				/// <inheritdoc />
@@ -385,16 +468,22 @@ namespace ICSharpCode.NRefactory.CSharp
 
 				#endregion
 
-				/// <inheritdoc />
-				public string ConvertFrom(string text)
+				Dictionary<char, IEnumerable<char>> encodeReplace = new Dictionary<char, IEnumerable<char>>
 				{
-					throw new NotImplementedException();
+					{'\"', "\"\""},
+				};
+
+				/// <inheritdoc />
+				public string Encode(string text)
+				{
+					return string.Concat(text.SelectMany(c => encodeReplace.ContainsKey(c) ? encodeReplace[c] : new[] { c }));
 				}
 
 				/// <inheritdoc />
-				public string CovertTo(string text)
+				public string Decode(string text)
 				{
-					throw new NotImplementedException();
+					bool isEscaped = false;
+					return string.Concat(text.Where(c => !(isEscaped = !isEscaped && c == '"')));
 				}
 
 				/// <inheritdoc />
