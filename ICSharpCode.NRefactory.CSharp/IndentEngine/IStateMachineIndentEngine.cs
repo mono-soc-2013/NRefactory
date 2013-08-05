@@ -54,5 +54,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		bool LineBeganInsideVerbatimString { get; }
 
 		bool LineBeganInsideMultiLineComment { get; }
+
+		new IStateMachineIndentEngine Clone();
 	}
 }

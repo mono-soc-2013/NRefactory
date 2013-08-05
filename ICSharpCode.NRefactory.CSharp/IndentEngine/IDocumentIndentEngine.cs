@@ -28,6 +28,9 @@ using System;
 
 namespace ICSharpCode.NRefactory.CSharp
 {
+	/// <summary>
+	///     The base interface for all indent engines.
+	/// </summary>
 	public interface IDocumentIndentEngine : ICloneable
 	{
 		/// <summary>
@@ -80,7 +83,7 @@ namespace ICSharpCode.NRefactory.CSharp
 		void Reset();
 
 		/// <summary>
-		///     Updates the engine to the given offset
+		///     Updates the engine to the given offset.
 		/// </summary>
 		/// <param name="offset">
 		///     Valid offset in <see cref="Document"/>.
