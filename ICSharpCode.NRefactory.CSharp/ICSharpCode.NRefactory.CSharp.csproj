@@ -560,6 +560,7 @@
     <Compile Include="Refactoring\CodeIssues\RedundantBaseTypeIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\RedundantBlockInDifferentBranchesIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\RedundantExplicitArrayCreationIssue.cs" />
+    <Compile Include="Refactoring\CodeIssues\CompilerErrors\CS0659OverrideEqualWithoutGetHashCode.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
