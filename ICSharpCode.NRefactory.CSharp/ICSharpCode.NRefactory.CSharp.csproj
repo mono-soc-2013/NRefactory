@@ -561,6 +561,7 @@
     <Compile Include="Refactoring\CodeIssues\RedundantBlockInDifferentBranchesIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\RedundantExplicitArrayCreationIssue.cs" />
     <Compile Include="Refactoring\CodeIssues\ForStatementConditionIsTrueIssue.cs" />
+    <Compile Include="Refactoring\CodeIssues\RedundantCheckBeforeAssignmentIssue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
