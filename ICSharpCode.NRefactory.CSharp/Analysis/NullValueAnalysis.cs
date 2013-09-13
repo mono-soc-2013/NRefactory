@@ -1466,7 +1466,12 @@ namespace ICSharpCode.NRefactory.CSharp.Analysis
 				if (methodResolveResult == null)
 					return VisitorResult.ForValue(data, NullValueStatus.Unknown);
 
+				if (methodResolveResult.Member.Attributes.Any(attribute => attribute.AttributeType.FullName == "JetBrains.Annotations.TerminatesProgramExecution")) {
+					return VisitorResult.ForException(data);
+				}
+
 				var method = methodResolveResult.Member as IMethod;
+
 				if (method != null) {
 					if (method.GetAttribute(new FullTypeName("JetBrains.Annotations.AssertionMethodAttribute")) != null) {
 						var assertionParameters = method.Parameters.Select((parameter, index) => new { index, parameter })

@@ -2186,6 +2186,41 @@ class TestClass
 			
 			Assert.AreEqual(NullValueStatus.UnreachableOrInexistent, analysis.GetVariableStatusAfterStatement(lastStatement, "x"));
 		}
+
+		[Test]
+		public void TestTerminateExecution()
+		{
+			var parser = new CSharpParser();
+			var tree = parser.Parse(@"
+namespace JetBrains.Annotations
+{
+	[System.AttributeUsage(System.AttributeTargets.Method)]
+	class TerminatesProgramExecution : System.Attribute
+	{
+	}
+}
+class TestClass
+{
+	[JetBrains.Annotations.TerminatesProgramExecution]
+	void ThrowException() {
+		throw new Exception();
+	}
+	
+	void TestMethod(string x)
+	{
+		ThrowException();
+	}
+}
+", "test.cs");
+			Assert.AreEqual(0, tree.Errors.Count);
+			
+			var method = tree.Descendants.OfType<MethodDeclaration>().Last();
+			var analysis = CreateNullValueAnalysis(tree, method);
+			
+			var lastStatement = method.Body.Statements.Last();
+			
+			Assert.AreEqual(NullValueStatus.UnreachableOrInexistent, analysis.GetVariableStatusAfterStatement(lastStatement, "x"));
+		}
 	}
 }
 
