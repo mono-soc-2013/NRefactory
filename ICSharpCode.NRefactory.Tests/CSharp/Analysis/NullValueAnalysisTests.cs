@@ -2221,6 +2221,36 @@ class TestClass
 			
 			Assert.AreEqual(NullValueStatus.UnreachableOrInexistent, analysis.GetVariableStatusAfterStatement(lastStatement, "x"));
 		}
+
+		[Test]
+		public void TestOptions()
+		{
+			var parser = new CSharpParser();
+			var tree = parser.Parse(@"
+
+class TestClass
+{
+	void TestMethod(string x, string y)
+	{
+		if (x == null || y == null) {
+			if (x == null) {
+				y = null;
+			}
+		} else {
+			y = null;
+		}
+	}
+}
+", "test.cs");
+			Assert.AreEqual(0, tree.Errors.Count);
+			
+			var method = tree.Descendants.OfType<MethodDeclaration>().Last();
+			var analysis = CreateNullValueAnalysis(tree, method);
+			
+			var lastStatement = method.Body.Statements.Last();
+			
+			Assert.AreEqual(NullValueStatus.DefinitelyNull, analysis.GetVariableStatusAfterStatement(lastStatement, "y"));
+		}
 	}
 }
 
