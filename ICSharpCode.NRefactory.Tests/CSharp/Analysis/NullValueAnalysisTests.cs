@@ -58,6 +58,7 @@ namespace ICSharpCode.NRefactory.CSharp.Analysis
 			{
 				IProjectContent pc = new CSharpProjectContent();
 				pc = pc.AddAssemblyReferences(CecilLoaderTests.Mscorlib);
+				pc = pc.AddAssemblyReferences(CecilLoaderTests.SystemCore);
 				pc = pc.AddOrUpdateFiles(new[] {
 					tree.ToTypeSystem()
 				});
@@ -470,7 +471,7 @@ class TestClass
 
 			var end = method.Body.Statements.Last();
 
-			Assert.AreEqual(NullValueStatus.Unknown, analysis.GetVariableStatusBeforeStatement(end, "handlerPath"));
+			Assert.AreNotEqual(NullValueStatus.DefinitelyNull, analysis.GetVariableStatusBeforeStatement(end, "handlerPath"));
 		}
 
 		[Test]
@@ -776,12 +777,13 @@ class TestClass
 			var parser = new CSharpParser();
 			var tree = parser.Parse(@"
 using System;
+using System.Linq;
 class TestClass
 {
 	void TestMethod()
 	{
 		int? accum = 0;
-		foreach (var x in new int?[] { 1, 2, 3}) {
+		foreach (var x in from item in new int?[] { 1, 2, 3} select item) {
 			Action action = () => { x = null; };
 			accum += x;
 		}
@@ -1340,11 +1342,38 @@ class TestClass
 		}
 
 		[Test]
+		public void TestBasicLinq()
+		{
+			var parser = new CSharpParser();
+			var tree = parser.Parse(@"
+using System;
+using System.Linq;
+class TestClass
+{
+	void TestMethod()
+	{
+		int?[] collection = new int?[10];
+		var x = from item in collection
+				select item;
+	}
+}", "test.cs");
+			Assert.AreEqual(0, tree.Errors.Count);
+			
+			var method = tree.Descendants.OfType<MethodDeclaration>().Single();
+			var analysis = CreateNullValueAnalysis(tree, method);
+			
+			var linqStatement = (VariableDeclarationStatement)method.Body.Statements.Last();
+
+			Assert.AreEqual(NullValueStatus.DefinitelyNotNull, analysis.GetVariableStatusAfterStatement(linqStatement, "x"));
+		}
+
+		[Test]
 		public void TestLinq()
 		{
 			var parser = new CSharpParser();
 			var tree = parser.Parse(@"
 using System;
+using System.Linq;
 class TestClass
 {
 	void TestMethod()
@@ -1380,11 +1409,43 @@ class TestClass
 		}
 
 		[Test]
+		public void TestLinqResetVariable()
+		{
+			var parser = new CSharpParser();
+			var tree = parser.Parse(@"
+using System;
+using System.Linq;
+class TestClass
+{
+	void TestMethod()
+	{
+		foreach (var x in from item in new int?[] { 1, 2, 3 }
+		                  where item != null ? (item = null) == null : (item = 1) != null
+		                  select item) {
+			
+		}
+	}
+}
+", "test.cs");
+
+			Assert.AreEqual(0, tree.Errors.Count);
+			
+			var method = tree.Descendants.OfType<MethodDeclaration>().Single();
+			var analysis = CreateNullValueAnalysis(tree, method);
+			
+			var foreachStatement = (ForeachStatement) method.Body.Statements.Single();
+			var foreachBody = foreachStatement.EmbeddedStatement;
+			
+			Assert.AreEqual(NullValueStatus.DefinitelyNull, analysis.GetVariableStatusBeforeStatement(foreachBody, "x"));
+		}
+
+		[Test]
 		public void TestLinqMember()
 		{
 			var parser = new CSharpParser();
 			var tree = parser.Parse(@"
 using System;
+using System.Linq;
 class TestClass
 {
 	void TestMethod()
@@ -1414,6 +1475,7 @@ class TestClass
 			var parser = new CSharpParser();
 			var tree = parser.Parse(@"
 using System;
+using System.Linq;
 class TestClass
 {
 	void TestMethod()
@@ -1443,6 +1505,7 @@ class TestClass
 			var parser = new CSharpParser();
 			var tree = parser.Parse(@"
 using System;
+using System.Linq;
 class TestClass
 {
 	void TestMethod()
@@ -1470,6 +1533,7 @@ class TestClass
 			var parser = new CSharpParser();
 			var tree = parser.Parse(@"
 using System;
+using System.Linq;
 abstract class TestClass
 {
 	abstract int?[] Collection { get; }
